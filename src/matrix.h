@@ -1,8 +1,11 @@
+#pragma once
+
 #include <iostream>
 #include <iomanip>
 #include <stdlib.h>
 #include <functional>
 #include <sstream>
+#include <initializer_list>
 
 namespace cop
 {
@@ -33,7 +36,7 @@ namespace cop
             v_ = new T[rows * cols]{0};
         }
 
-        Matrix(size_t rows, size_t cols, std::function<int()> init) : rows_(rows), cols_(cols)
+        Matrix(size_t rows, size_t cols, std::function<double()> init) : rows_(rows), cols_(cols)
         {
             v_ = new T[rows * cols]{0};
 
@@ -215,34 +218,23 @@ namespace cop
             return result;
         }
 
-        Matrix<T> operator!() const
+        double operator!() const
         {
-            if (cols_ == 1)
+            if (rows_ != 1 && cols_ != 1)
             {
-                Matrix result(rows_, rows_);
-
-                for (auto index = 0; index < rows_; index++)
-                {
-                    result[index][index] = (*this)[index][0];
-                }
-
-                return result;
+                throw std::runtime_error("Cannot get magnitude of non-vector matrix.");
             }
+
+            auto m = *this;
 
             if (rows_ == 1)
             {
-                Matrix result(cols_, cols_);
-                for (auto index = 0; index < cols_; index++)
-                {
-                    result[index][index] = (*this)[0][index];
-                }
-
-                return result;
+                return (m * ~m)[0][0];
             }
-
-            throw std::runtime_error("Cannot create diagonal matrix; neither rows nor columns is 1.");
-
-            return Matrix(0, 0);
+            else
+            {
+                return (~m * m)[0][0];
+            }
         }
 
         Matrix<T>
