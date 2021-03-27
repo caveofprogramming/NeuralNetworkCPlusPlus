@@ -1,7 +1,6 @@
 # NeuralNetworkCPlusPlus
 
 A neural network in C++.
-
 In progress.
 
 To build:
