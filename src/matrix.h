@@ -36,7 +36,7 @@ namespace cop
             v_ = new T[rows * cols]{0};
         }
 
-        Matrix(size_t rows, size_t cols, std::function<double()> init) : rows_(rows), cols_(cols)
+        Matrix(size_t rows, size_t cols, std::function<double(int, int)> init) : rows_(rows), cols_(cols)
         {
             v_ = new T[rows * cols]{0};
 
@@ -44,7 +44,7 @@ namespace cop
             {
                 for (auto col = 0; col < cols_; col++)
                 {
-                    v_[cols_ * row + col] = init();
+                    v_[cols_ * row + col] = init(row, col);
                 }
             }
         }
@@ -95,9 +95,14 @@ namespace cop
             return rows_;
         }
 
-        static int init()
+        static double signedRandomUnit(double row, double col)
         {
-            return 5.0 - static_cast<int>(10.0 * rand() / RAND_MAX);
+            return 1.0 - (2.0 * rand() / RAND_MAX);
+        }
+
+        static double identity(double row, double col)
+        {
+            return row == col ? 1.0: 0.0;
         }
 
         T *operator[](size_t row)
@@ -129,6 +134,25 @@ namespace cop
             return result;
         }
 
+        Matrix<T> operator%(const Matrix<T> &multiplier)
+        {
+            if (rows_ != multiplier.rows_ || cols_ != multiplier.cols_)
+            {
+                throw std::runtime_error("Cannot calculate Hadamard product for matrixes. Different sizes.");
+            }
+
+            Matrix<T> result(rows_, cols_);
+
+            int entries = rows_ * cols_;
+
+            for (int i = 0; i < entries; i++)
+            {
+                result.v_[i] = v_[i] * multiplier.v_[i];
+            }
+
+            return result;
+        }
+
         Matrix<T> operator-(const Matrix<T> &subtrahend)
         {
             if (rows_ != subtrahend.rows_ || cols_ != subtrahend.cols_)
@@ -146,6 +170,21 @@ namespace cop
             }
 
             return result;
+        }
+
+        void operator-=(const Matrix<T> &subtrahend)
+        {
+            if (rows_ != subtrahend.rows_ || cols_ != subtrahend.cols_)
+            {
+                throw std::runtime_error("Cannot subtract matrixes. Different sizes.");
+            }
+
+            int entries = rows_ * cols_;
+
+            for (int i = 0; i < entries; i++)
+            {
+                v_[i] -= subtrahend.v_[i];
+            }
         }
 
         Matrix<T> operator*(const Matrix<T> &multiplier)
@@ -218,7 +257,7 @@ namespace cop
             return result;
         }
 
-        double operator!() const
+        double magnitude() const
         {
             if (rows_ != 1 && cols_ != 1)
             {
