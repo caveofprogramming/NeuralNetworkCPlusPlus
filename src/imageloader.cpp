@@ -21,10 +21,8 @@ uint32_t cop::ImageLoader::readInt32(std::ifstream &inputFile)
     return value;
 }
 
-std::vector<int> cop::ImageLoader::loadLabels(std::string filename)
+void cop::ImageLoader::loadLabels(std::vector<Image> &images, std::string filename)
 {
-    std::vector<int> labels;
-
     std::ifstream inputFile;
     inputFile.open(filename, std::ios::binary);
 
@@ -35,7 +33,7 @@ std::vector<int> cop::ImageLoader::loadLabels(std::string filename)
         if (magicNumber != 2049)
         {
             std::cerr << "Invalid file format" << std::endl;
-            return labels;
+            return;
         }
 
         uint32_t numberLabels = readInt32(inputFile);
@@ -45,14 +43,12 @@ std::vector<int> cop::ImageLoader::loadLabels(std::string filename)
         for (int i = 0; i < numberLabels; i++)
         {
             inputFile.read(reinterpret_cast<char *>(&label), 1);
-            labels.push_back((int)label);
+            images[i].setLabel((int)label);
         }
     }
-
-    return labels;
 }
 
-std::vector<cop::Image> cop::ImageLoader::loadImages(std::string filename)
+std::vector<cop::Image> cop::ImageLoader::loadImages(std::string filename, int &width, int &height)
 {
     std::vector<cop::Image> images;
     std::ifstream inputFile;
@@ -70,14 +66,14 @@ std::vector<cop::Image> cop::ImageLoader::loadImages(std::string filename)
         }
 
         uint32_t numberImages = readInt32(inputFile);
-        uint32_t numberRows = readInt32(inputFile);
-        uint32_t numberCols = readInt32(inputFile);
+        height = readInt32(inputFile);
+        width = readInt32(inputFile);
 
-        int imageSize = numberRows * numberCols;
+        int imageSize = width * height;
 
         for (int i = 0; i < numberImages; i++)
         {
-            Image image(numberCols, numberRows);
+            Image image(width, height);
             inputFile.read(image.get(), imageSize);
             images.push_back(image);
         }
@@ -86,7 +82,7 @@ std::vector<cop::Image> cop::ImageLoader::loadImages(std::string filename)
     }
     else
     {
-        std::cout << "Could not read file " + filename << std::endl;
+        std::cerr << "Could not read file " + filename << std::endl;
     }
 
     return images;

@@ -13,7 +13,6 @@ namespace cop
         std::vector<Matrix<double>> w_;
         std::vector<Matrix<double>> b_;
 
-        bool learnMode{false};
         double learningRate{0.01};
 
     protected:
@@ -21,15 +20,14 @@ namespace cop
         static double sigmoid(double input);
         double calculateCost(cop::Matrix<double> &input, cop::Matrix<double> &expected);
         void learn(std::vector<Matrix<double>> &outputs, cop::Matrix<double> *input, cop::Matrix<double> *expected);
+        void calculateOutput(std::vector<cop::Matrix<double>> &output, cop::Matrix<double> &input);
 
     public:
-        void setLearn(bool on=true) { learnMode = on; };
         void setLearningRate(double rate) { learningRate = rate; };
         void rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<double> &expected);
 
         Network(std::initializer_list<size_t> layerSizes);
-        cop::Matrix<double>  calculateOutput(cop::Matrix<double> *input, cop::Matrix<double> *expected = nullptr);
-        void run(std::vector<cop::Matrix<double>> &output, cop::Matrix<double> &input);
+        cop::Matrix<double>  run(cop::Matrix<double> *input, cop::Matrix<double> *expected = nullptr);
         cop::Matrix<double> calculateCostGradients(cop::Matrix<double> &input, cop::Matrix<double> &expected);
 
         friend std::ostream &operator<<(std::ostream &out, const cop::Network &network);

@@ -1,53 +1,121 @@
 #include <sstream>
+#include <vector>
+#include <cmath>
 #include "network.h"
 #include "matrix.h"
 #include "imageloader.h"
 
-
 typedef cop::Matrix<double> Matrix;
 using namespace std;
 
-int main()
+char matrixToChar(cop::Matrix<double> &m)
 {
-     auto images = cop::ImageLoader::loadImages("../MNIST/train-images-idx3-ubyte");
-     auto labels = cop::ImageLoader::loadLabels("../MNIST/train-labels-idx1-ubyte");
+     char value = 0;
 
-     for(int i = 0; i < 100; i++)
+     for(auto i = 0; i < m.rows(); i++)
      {
-          stringstream ss;
-          ss << "test" << i << ".bmp";
-
-          images[i].save(ss.str());
-
-          std::cout << i << ": " << labels[i] << std::endl;
+          value <<= 1;
+         
+          if(abs(m[i][0] - 1.0) < 0.1)
+          {
+               value += 1;
+          }
      }
 
+     return value;
+}
 
-     /*
-     cop::Network network{2, 3, 2, 4, 2};
+cop::Matrix<double> charToMatrix(char value)
+{
+     cop::Matrix<double> m(10, 1);
 
-     cop::Matrix<double> input = ~cop::Matrix({1.5, 2.0});
-     cop::Matrix<double> expected = ~cop::Matrix({0.7, -2.3});
+     for(auto i = 0; i < 8; i++)
+     {
+          m[7-i][0] = value & 1;
 
-     //network.rateOfCostChangeWrt(input, expected);
-     auto output1 = network.calculateOutput(&input, &expected);
-     auto cost1 = (output1 - expected).magnitude();
+          value >>= 1;
+     }
 
-     network.setLearningRate(10);
-     network.setLearn(true);
-     network.calculateOutput(&input, &expected);
-     network.setLearn(false);
+     return m;
+}
 
-     auto output2 = network.calculateOutput(&input, &expected);
-     auto cost2 = (output2 - expected).magnitude();
+int main()
+{
+     int width;
+     int height;
 
-     std::cout << std::fixed;
-     std::cout.precision(10);
+     std::cout << "Loading training data ..." << std::endl;
 
-     std::cout << "Cost improvement: " << (cost1 - cost2) << std::endl;
-     std::cout << "Cost1: " << cost1 << std::endl;
-     std::cout << "Cost2: " << cost2 << std::endl;
-     */
+     std::vector<cop::Image> images = cop::ImageLoader::loadImages("../MNIST/train-images-idx3-ubyte", width, height);
+     cop::ImageLoader::loadLabels(images, "../MNIST/train-labels-idx1-ubyte");
+
+     unsigned long imageSize = width * height;
+
+     cop::Network network{imageSize, 10, 10};
+
+     network.setLearningRate(0.1);
+
+     std::cout << "Training ...." << std::endl;
+
+     int count = 0;
+
+     for (auto &image : images)
+     {
+          cop::Matrix<double> input(image.size(), 1, [&image](int row, int col) {
+               return image[row];
+          });
+
+          auto expected = charToMatrix(image.getLabel());
+
+          network.run(&input, &expected);
+
+          if(count % 100 == 0)
+          {
+               std::cout << count << std::endl;
+          }
+
+          count++;
+     }
+
+     std::cout << "Loading test images ..." << std::endl;
+
+     images = cop::ImageLoader::loadImages("../MNIST/t10k-images-idx3-ubyte", width, height);
+     cop::ImageLoader::loadLabels(images, "../MNIST/t10k-labels-idx1-ubyte");
+
+     std::cout << "Identifying characters ...." << std::endl;
+
+     int correct = 0;
+     int incorrect = 0;
+     count = 0;
+
+     for (auto &image : images)
+     {
+          cop::Matrix<double> input(image.size(), 1, [&image](int row, int col) {
+               return image[row];
+          });
+
+          char label = image.getLabel();
+
+          auto output = network.run(&input);
+
+          if(matrixToChar(output) == label)
+          {
+               correct++;
+          }
+          else 
+          {
+               incorrect++;
+          }
+
+          if(count % 100 == 0)
+          {
+               std::cout << count << std::endl;
+          }
+
+          count++;
+     }
+
+     std::cout << "Correct: " << correct << "; incorrect: " << incorrect << std::endl;
 
      return 0;
 }

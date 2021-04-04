@@ -31,6 +31,9 @@ namespace cop
         }
 
     public:
+        size_t rows() { return rows_; };
+        size_t cols() { return cols_; };
+
         Matrix(size_t rows, size_t cols) : rows_(rows), cols_(cols)
         {
             v_ = new T[rows * cols]{0};

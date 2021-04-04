@@ -10,13 +10,20 @@ namespace cop
     private:
         int width;
         int height;
+        int label;
         std::vector<char> pixels;
 
     public:
         Image(int width, int height);
 
         char * get();
+        int size() { return width * height; };
+        void setLabel(int label) { this->label = label; };
+        char getLabel() { return label; };
 
         bool save(std::string filename);
+        double operator[](int index);
+
+        
     };
 }

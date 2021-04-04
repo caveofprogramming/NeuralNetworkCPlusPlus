@@ -64,13 +64,13 @@ void cop::Network::rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<d
 
     std::vector<Matrix<double>> outputs;
 
-    run(outputs, input);
+    calculateOutput(outputs, input);
     double cost1 = (outputs.back() - expected).magnitude() / 2.0;
     auto activations1 = outputs.back();
 
     wrt += inc;
 
-    run(outputs, input);
+    calculateOutput(outputs, input);
 
     double cost2 = (outputs.back() - expected).magnitude() / 2.0;
 
@@ -83,7 +83,7 @@ void cop::Network::rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<d
               << rate << std::endl;
 }
 
-void cop::Network::run(std::vector<cop::Matrix<double>> &outputs, cop::Matrix<double> &input)
+void cop::Network::calculateOutput(std::vector<cop::Matrix<double>> &outputs, cop::Matrix<double> &input)
 {
     auto result = input;
 
@@ -112,9 +112,6 @@ void cop::Network::learn(std::vector<Matrix<double>> &outputs, cop::Matrix<doubl
         auto &weights = w_[i];
         auto &biases = b_[i];
 
-        std::cout << "weights:\n" << weights << std::endl;
-        std::cout << "biases:\n" << biases << std::endl;
-
         auto layerActivationRates = layerInput.transform(outputRateTransform);
 
         auto weightGradients = layerError * ~layerInput;
@@ -130,14 +127,13 @@ void cop::Network::learn(std::vector<Matrix<double>> &outputs, cop::Matrix<doubl
     }
 }
 
-cop::Matrix<double> cop::Network::calculateOutput(cop::Matrix<double> *input, cop::Matrix<double> *expected)
+cop::Matrix<double> cop::Network::run(cop::Matrix<double> *input, cop::Matrix<double> *expected)
 {
     std::vector<Matrix<double>> outputs;
 
-    std::cout << "first weight: \n" << w_[0] << std::endl;
-    run(outputs, *input);
+    calculateOutput(outputs, *input);
 
-    if (learnMode)
+    if (expected != nullptr)
     {
         learn(outputs, input, expected);
     }

@@ -14,6 +14,11 @@ char *cop::Image::get()
     return pixels.data();
 }
 
+double cop::Image::operator[](int index)
+{
+    return pixels[index];
+}
+
 bool cop::Image::save(std::string filename)
 {
     cop::BitmapFileHeader bmfh;

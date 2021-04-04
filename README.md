@@ -1,6 +1,6 @@
 # NeuralNetworkCPlusPlus
 
-A neural network in C++.
+A neural network in C++, with character recognition example using MNIST database.
 In progress.
 
 To build:
