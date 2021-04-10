@@ -1,22 +1,57 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <stdlib.h>
 #include "network.h"
 #include "matrix.h"
 #include "imageloader.h"
-
 typedef cop::Matrix<double> Matrix;
 using namespace std;
+/*
+int main()
+{
+     cop::Matrix<double> inputs[] = {{0, 0, 0, 1}, {0, 0, 1, 0}, {0, 1, 0, 0}, {1, 0, 0, 0}};
+
+     cop::Matrix<double> expecteds[] = {{0.5, 1, 0.3, 0}, {1, 0.5, 0, 1}, {0, 1, 0, 0}, {0.7, 0, 0, 0}};
+
+     cop::Network network = {4, 4, 4};
+
+     srand(time(NULL));
+
+     for (int i = 0; i < 1E6; i++)
+     {
+          int random = (int)((4.0 * rand())/RAND_MAX);
+
+          auto input = ~inputs[random];
+          auto expected = ~expecteds[random];
+
+          auto output = network.run(&input, &expected);
+
+          double loss = (expected - output).magnitude()/2.0;
+
+          if(i % 10000 == 0)
+          {
+               std::cout << loss << std::endl;
+               //std::cout << "expected:\n" << expected << std::endl;
+               //std::cout << "output:\n" << output << std::endl;
+          }
+
+
+     }
+
+     return 0;
+}
+*/
 
 char matrixToChar(cop::Matrix<double> &m)
 {
      char value = 0;
 
-     for(auto i = 0; i < m.rows(); i++)
+     for (auto i = 0; i < m.rows(); i++)
      {
           value <<= 1;
-         
-          if(abs(m[i][0] - 1.0) < 0.1)
+
+          if (abs(m[i][0] - 1.0) < 0.1)
           {
                value += 1;
           }
@@ -29,9 +64,9 @@ cop::Matrix<double> charToMatrix(char value)
 {
      cop::Matrix<double> m(10, 1);
 
-     for(auto i = 0; i < 8; i++)
+     for (auto i = 0; i < 8; i++)
      {
-          m[7-i][0] = value & 1;
+          m[7 - i][0] = value & 1;
 
           value >>= 1;
      }
@@ -51,7 +86,7 @@ int main()
 
      unsigned long imageSize = width * height;
 
-     cop::Network network{imageSize, 10, 10};
+     cop::Network network{imageSize, 20, 10};
 
      network.setLearningRate(0.1);
 
@@ -59,19 +94,30 @@ int main()
 
      int count = 0;
 
-     for (auto &image : images)
+     double lossTotal = 0;
+
+     for (int i = 0; i < 1E7; i++)
      {
+          int index = (int)(images.size() * ((double)rand()) / RAND_MAX);
+          auto image = images[index];
+
           cop::Matrix<double> input(image.size(), 1, [&image](int row, int col) {
-               return image[row];
+               return image[row] / 255.0;
           });
 
           auto expected = charToMatrix(image.getLabel());
 
-          network.run(&input, &expected);
+          auto output = network.run(&input, &expected);
 
-          if(count % 100 == 0)
+          auto loss = (output - expected).magnitude() / (2 * output.cols());
+
+          lossTotal += loss;
+
+          if (count % 100 == 0)
           {
-               std::cout << count << std::endl;
+               std::cout << "\n"
+                         << count << "; loss: " << lossTotal / 100.0 << std::endl;
+               lossTotal = 0;
           }
 
           count++;
@@ -79,8 +125,10 @@ int main()
 
      std::cout << "Loading test images ..." << std::endl;
 
-     images = cop::ImageLoader::loadImages("../MNIST/t10k-images-idx3-ubyte", width, height);
-     cop::ImageLoader::loadLabels(images, "../MNIST/t10k-labels-idx1-ubyte");
+     //images.clear();
+
+     //images = cop::ImageLoader::loadImages("../MNIST/t10k-images-idx3-ubyte", width, height);
+     //cop::ImageLoader::loadLabels(images, "../MNIST/t10k-labels-idx1-ubyte");
 
      std::cout << "Identifying characters ...." << std::endl;
 
@@ -88,26 +136,29 @@ int main()
      int incorrect = 0;
      count = 0;
 
-     for (auto &image : images)
+     for (auto image : images)
      {
+
           cop::Matrix<double> input(image.size(), 1, [&image](int row, int col) {
-               return image[row];
+               return image[row] / 255.0;
           });
 
           char label = image.getLabel();
 
           auto output = network.run(&input);
 
-          if(matrixToChar(output) == label)
+          char result = matrixToChar(output);
+
+          if (result == label)
           {
                correct++;
           }
-          else 
+          else
           {
                incorrect++;
           }
 
-          if(count % 100 == 0)
+          if (count % 100 == 0)
           {
                std::cout << count << std::endl;
           }

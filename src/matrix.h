@@ -6,6 +6,7 @@
 #include <functional>
 #include <sstream>
 #include <initializer_list>
+#include <exception>
 
 namespace cop
 {
@@ -36,6 +37,16 @@ namespace cop
 
         Matrix(size_t rows, size_t cols) : rows_(rows), cols_(cols)
         {
+            if(rows == 0 || cols == 0)
+            {
+                throw std::runtime_error("rows or columns specified to Matrix constructor is zero");
+            }
+
+            if(rows > 1E6 || cols > 1E6)
+            {
+                throw std::runtime_error("rows or columns specified to Matrix constructor are greater than max allowed");
+            }
+
             v_ = new T[rows * cols]{0};
         }
 

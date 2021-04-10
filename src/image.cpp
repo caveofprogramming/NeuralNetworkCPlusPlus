@@ -59,4 +59,6 @@ bool cop::Image::save(std::string filename)
     {
         return false;
     }
+
+    return true;
 }

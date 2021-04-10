@@ -86,7 +86,7 @@ void cop::Network::rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<d
 void cop::Network::calculateOutput(std::vector<cop::Matrix<double>> &outputs, cop::Matrix<double> &input)
 {
     auto result = input;
-
+    
     outputs.clear();
 
     for (auto i = 0; i < w_.size(); i++)
@@ -132,7 +132,7 @@ cop::Matrix<double> cop::Network::run(cop::Matrix<double> *input, cop::Matrix<do
     std::vector<Matrix<double>> outputs;
 
     calculateOutput(outputs, *input);
-
+    
     if (expected != nullptr)
     {
         learn(outputs, input, expected);
