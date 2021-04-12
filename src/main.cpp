@@ -2,44 +2,36 @@
 #include <vector>
 #include <cmath>
 #include <stdlib.h>
+#include <time.h>
+
 #include "network.h"
 #include "matrix.h"
 #include "imageloader.h"
 typedef cop::Matrix<double> Matrix;
 using namespace std;
+
 /*
 int main()
 {
-     cop::Matrix<double> inputs[] = {{0, 0, 0, 1}, {0, 0, 1, 0}, {0, 1, 0, 0}, {1, 0, 0, 0}};
+     Matrix m1{
+          {2, 3},
+          {4, 2}
+     };
 
-     cop::Matrix<double> expecteds[] = {{0.5, 1, 0.3, 0}, {1, 0.5, 0, 1}, {0, 1, 0, 0}, {0.7, 0, 0, 0}};
+     Matrix m2{
+          {5, 6},
+          {6, 7}
+     };
 
-     cop::Network network = {4, 4, 4};
+     time_t start = time(&start);
 
-     srand(time(NULL));
-
-     for (int i = 0; i < 1E6; i++)
+     for (int i = 0; i < 1E8; i++)
      {
-          int random = (int)((4.0 * rand())/RAND_MAX);
-
-          auto input = ~inputs[random];
-          auto expected = ~expecteds[random];
-
-          auto output = network.run(&input, &expected);
-
-          double loss = (expected - output).magnitude()/2.0;
-
-          if(i % 10000 == 0)
-          {
-               std::cout << loss << std::endl;
-               //std::cout << "expected:\n" << expected << std::endl;
-               //std::cout << "output:\n" << output << std::endl;
-          }
-
-
+          auto m3 = m1 * m2;
      }
 
-     return 0;
+     time_t end = time(&end);
+     cout << end - start << " seconds" << endl;
 }
 */
 
@@ -81,8 +73,8 @@ int main()
 
      std::cout << "Loading training data ..." << std::endl;
 
-     std::vector<cop::Image> images = cop::ImageLoader::loadImages("../MNIST/train-images-idx3-ubyte", width, height);
-     cop::ImageLoader::loadLabels(images, "../MNIST/train-labels-idx1-ubyte");
+     std::vector<cop::Image> images = cop::ImageLoader::loadImages("/Users/john/Projects/NeuralNetworkCPlusPlus/MNIST/train-images-idx3-ubyte", width, height);
+     cop::ImageLoader::loadLabels(images, "/Users/john/Projects/NeuralNetworkCPlusPlus/MNIST/train-labels-idx1-ubyte");
 
      unsigned long imageSize = width * height;
 
@@ -96,31 +88,31 @@ int main()
 
      double lossTotal = 0;
 
-     for (int i = 0; i < 1E7; i++)
+     for (int i = 0; i < 20; i++)
      {
-          int index = (int)(images.size() * ((double)rand()) / RAND_MAX);
-          auto image = images[index];
-
-          cop::Matrix<double> input(image.size(), 1, [&image](int row, int col) {
-               return image[row] / 255.0;
-          });
-
-          auto expected = charToMatrix(image.getLabel());
-
-          auto output = network.run(&input, &expected);
-
-          auto loss = (output - expected).magnitude() / (2 * output.cols());
-
-          lossTotal += loss;
-
-          if (count % 100 == 0)
+          for (auto &image : images)
           {
-               std::cout << "\n"
-                         << count << "; loss: " << lossTotal / 100.0 << std::endl;
-               lossTotal = 0;
-          }
+               cop::Matrix<double> input(image.size(), 1, [&image](int row, int col) {
+                    return image[row] / 255.0;
+               });
 
-          count++;
+               auto expected = charToMatrix(image.getLabel());
+
+               auto output = network.run(&input, &expected);
+
+               auto loss = (output - expected).magnitude() / (2 * output.cols());
+
+               lossTotal += loss;
+
+               if (count % 100 == 0)
+               {
+                    std::cout << "\n"
+                              << count << "; loss: " << lossTotal / 100.0 << std::endl;
+                    lossTotal = 0;
+               }
+
+               count++;
+          }
      }
 
      std::cout << "Loading test images ..." << std::endl;
@@ -170,3 +162,4 @@ int main()
 
      return 0;
 }
+

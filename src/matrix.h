@@ -37,12 +37,12 @@ namespace cop
 
         Matrix(size_t rows, size_t cols) : rows_(rows), cols_(cols)
         {
-            if(rows == 0 || cols == 0)
+            if (rows == 0 || cols == 0)
             {
                 throw std::runtime_error("rows or columns specified to Matrix constructor is zero");
             }
 
-            if(rows > 1E6 || cols > 1E6)
+            if (rows > 1E6 || cols > 1E6)
             {
                 throw std::runtime_error("rows or columns specified to Matrix constructor are greater than max allowed");
             }
@@ -116,7 +116,7 @@ namespace cop
 
         static double identity(double row, double col)
         {
-            return row == col ? 1.0: 0.0;
+            return row == col ? 1.0 : 0.0;
         }
 
         T *operator[](size_t row)
@@ -214,11 +214,51 @@ namespace cop
 
             Matrix<T> result(rows_, multiplier.cols_);
 
-            for (size_t row = 0; row < rows_; row++)
+            const int multiplicationsPerEntry = cols_;
+            const int multiplicandSize = rows_ * cols_;
+            const int multiplierSize = multiplier.rows_ * multiplier.cols_;
+            const int outputCols = multiplier.cols_;
+            const int outputSize = rows_ * outputCols;
+            const int totalMultiplications = outputSize * multiplicationsPerEntry;
+
+            int sum = 0;
+            int multiplicandOffset = 0;
+            int multiplierOffset = 0;
+            int outputOffset = 0;
+            int multiplications = 0;
+
+            int outputRow = 0;
+
+            for (int i = 0; i < totalMultiplications; ++i)
             {
-                for (size_t col = 0; col < multiplier.cols_; col++)
+                sum += v_[multiplicandOffset] * multiplier.v_[multiplierOffset];
+
+                ++multiplications;
+
+                if(++multiplicandOffset == multiplicandSize)
                 {
-                    result[row][col] = multiplyRowColumn(multiplier, row, col);
+                    ++multiplierOffset;
+                    multiplicandOffset = 0;
+                }
+
+                multiplierOffset += outputCols;
+
+                if(multiplications == multiplicationsPerEntry)
+                {
+                    multiplications = 0;
+                    result.v_[outputOffset] = sum;
+                    sum = 0;
+                    outputOffset += outputCols;
+                }
+
+                if(outputOffset >= outputSize)
+                {
+                    ++outputOffset -= outputSize;
+                }
+
+                if(multiplierOffset >= multiplierSize)
+                {
+                    multiplierOffset -= multiplierSize;
                 }
             }
 
