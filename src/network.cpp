@@ -116,14 +116,14 @@ void cop::Network::learn(std::vector<Matrix<double>> &outputs, cop::Matrix<doubl
 
         auto weightGradients = layerError * ~layerInput;
         
-        biases -= learningRate * layerError;
+        // biases -= learningRate * layerError;
 
         if (i > 0)
         {
             layerError = (~weights * layerError) % layerActivationRates;
         }
 
-        weights -= learningRate * weightGradients;
+        // weights -= learningRate * weightGradients;
     }
 }
 

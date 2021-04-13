@@ -221,7 +221,7 @@ namespace cop
             const int outputSize = rows_ * outputCols;
             const int totalMultiplications = outputSize * multiplicationsPerEntry;
 
-            int sum = 0;
+            double sum = 0;
             int multiplicandOffset = 0;
             int multiplierOffset = 0;
             int outputOffset = 0;
@@ -367,9 +367,16 @@ namespace cop
 
         friend Matrix<T> operator*(T value, const Matrix<T> &m)
         {
-            return m.transform([&value](double entry) {
-                return value * entry;
-            });
+            Matrix<T> result(m.rows_, m.cols_);
+
+            const int size = m.rows_ * m.cols_;
+
+            for(int i = 0; i < size; i++)
+            {
+                result.v_[i] = m.v_[i] * value;
+            }
+
+            return result;
         }
     };
 } // namespace cop
