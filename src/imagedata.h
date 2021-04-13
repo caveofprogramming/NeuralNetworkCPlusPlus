@@ -9,6 +9,7 @@ namespace cop
         uint32_t numberImages_ = 0;
         uint32_t imageWidth_ = 0;
         uint32_t imageHeight_ = 0;
+        uint32_t imageSize = 0;
         uint32_t pixelsPerImage_ = 0;
         uint8_t *pixels_ = nullptr;
         uint8_t *labels_ = nullptr;

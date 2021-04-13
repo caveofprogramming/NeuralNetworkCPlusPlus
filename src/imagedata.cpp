@@ -19,8 +19,6 @@ void cop::ImageData::save(int index)
 
     load(index);
 
-    auto pData = getBuffer();
-
     std::stringstream filename;
 
     filename << "image" << index << "_" << label << ".bmp";
@@ -28,11 +26,13 @@ void cop::ImageData::save(int index)
     cop::BitmapFileHeader bmfh;
     cop::BitmapInfoHeader bmih;
 
-    bmfh.dataOffset = sizeof(BitmapFileHeader) + sizeof(BitmapInfoHeader);
-    bmfh.fileSize = sizeof(bmfh) + sizeof(bmih) + (imageWidth_ * imageHeight_ * 3);
+    bmfh.dataOffset = sizeof(BitmapFileHeader) + sizeof(BitmapInfoHeader) + (256 * 4);
+    bmfh.fileSize = bmfh.dataOffset + (imageWidth_ * imageHeight_ * 3);
 
     bmih.width = imageWidth_;
     bmih.height = imageHeight_;
+    bmih.bitsPerPixel = 8;
+    bmih.colors = 256;
 
     std::ofstream file;
     file.open(filename.str(), ios::out | ios::binary);
@@ -47,15 +47,23 @@ void cop::ImageData::save(int index)
     file.write((char *)&bmfh, sizeof(bmfh));
     file.write((char *)&bmih, sizeof(bmih));
 
-    for(int i = 0; i < pixelsPerImage_; i++)
+    // Palette
+    for(int i = 0xFF; i >= 0; --i)
     {
-        int value = int(0x100 * pData[i]);
-        file.write((char *)&value, 1);
-        file.write((char *)&value, 1);
-        file.write((char *)&value, 1);
+        uint32_t color = ((i << 16) + (i << 8) + i);
+        file.write((char *)&color, 4);
     }
 
-    std::cout << "Written " << filename.str() << std::endl;
+    double *pBuffer = getBuffer();
+
+    for(int row = imageHeight_ - 1; row >= 0; --row)
+    {
+        for(int col = 0; col < imageWidth_; col++)
+        {
+            uint8_t pixel = uint8_t(pBuffer[row * imageWidth_ + col] * 0xFF);   
+            file.write((char *)&pixel, 1);
+        }
+    }
 }
 
 uint32_t cop::ImageData::readInt32(std::ifstream &inputFile)
