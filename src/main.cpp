@@ -5,7 +5,7 @@
 #include "imagedata.h"
 #include "matrix.h"
 
-int main() 
+int main()
 {
     cop::ImageData imageData;
 
@@ -15,10 +15,12 @@ int main()
 
     srand(time(nullptr));
 
-    for(int i = 0; i < 10; i++)
+    for (int epoch = 0; epoch < 20; epoch++)
     {
-        int index = int(imageData.getNumberImages() * double(rand())/RAND_MAX);
-        imageData.save(index);
+        for (int imageIndex = 0; imageIndex < imageData.getNumberImages(); imageIndex++)
+        {
+            imageData.load(imageIndex);
+        }
     }
 
     return 0;
