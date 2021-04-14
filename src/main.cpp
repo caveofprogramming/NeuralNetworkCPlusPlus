@@ -15,11 +15,16 @@ int main()
 
     srand(time(nullptr));
 
+    for(int i = 100; i < 110; i++)
+    {
+        imageData.save(i);
+    }
+
     for (int epoch = 0; epoch < 20; epoch++)
     {
         for (int imageIndex = 0; imageIndex < imageData.getNumberImages(); imageIndex++)
         {
-            imageData.load(imageIndex);
+            
         }
     }
 

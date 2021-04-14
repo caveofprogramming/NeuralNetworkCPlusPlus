@@ -9,15 +9,14 @@
 
 cop::ImageData::~ImageData()
 {
-    delete[] pixels_;
-    delete[] imageData_;
+    delete[] byteImageData_;
+    delete[] doubleImageData_;
+    delete[] labels_;
 }
 
 void cop::ImageData::save(int index)
 {
     int label = getLabel(index);
-
-    load(index);
 
     std::stringstream filename;
 
@@ -54,7 +53,7 @@ void cop::ImageData::save(int index)
         file.write((char *)&color, 4);
     }
 
-    double *pBuffer = getBuffer();
+    double *pBuffer = getImage(index);
 
     for(int row = imageHeight_ - 1; row >= 0; --row)
     {
@@ -101,19 +100,9 @@ int cop::ImageData::getLabel(int index)
     return int(labels_[index]);
 }
 
-void cop::ImageData::load(int index)
+double *cop::ImageData::getImage(int index)
 {
-    uint8_t *pData = pixels_ + (index * pixelsPerImage_);
-
-    for (int i = 0; i < pixelsPerImage_; i++)
-    {
-        imageData_[i] = double(*pData++ / 255.0);
-    }
-}
-
-double *cop::ImageData::getBuffer()
-{
-    return imageData_;
+    return doubleImageData_ + pixelsPerImage_ * index;
 }
 
 void cop::ImageData::load(std::string imageFileName, std::string labelFileName)
@@ -166,16 +155,20 @@ void cop::ImageData::load(std::string imageFileName, std::string labelFileName)
     imageWidth_ = readInt32(imageFile);
     pixelsPerImage_ = imageWidth_ * imageHeight_;
 
-    int imageDataSize = pixelsPerImage_ * numberImages_;
+    int totalPixels = pixelsPerImage_ * numberImages_;
 
-    pixels_ = new uint8_t[imageDataSize];
+    byteImageData_ = new uint8_t[totalPixels];
+    doubleImageData_ = new double[totalPixels];
     labels_ = new uint8_t[numberLabels];
 
-    imageFile.read(reinterpret_cast<char *>(pixels_), imageDataSize);
+    imageFile.read(reinterpret_cast<char *>(byteImageData_), totalPixels);
     labelFile.read(reinterpret_cast<char *>(labels_), numberLabels);
 
     imageFile.close();
     labelFile.close();
 
-    imageData_ = new double[imageDataSize];
+    for(int i = 0; i < totalPixels; ++i)
+    {
+        doubleImageData_[i] = double(byteImageData_[i])/255.0;
+    }
 }
