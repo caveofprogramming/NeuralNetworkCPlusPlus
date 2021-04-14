@@ -30,7 +30,6 @@ namespace cop
         int getLabel(int index);
         double *getImage(int index);
 
-
         ~ImageData();
     };
 }

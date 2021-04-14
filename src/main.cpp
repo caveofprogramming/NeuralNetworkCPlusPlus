@@ -13,12 +13,7 @@ int main()
 
     imageData.load(directory + "train-images-idx3-ubyte", directory + "train-labels-idx1-ubyte");
 
-    srand(time(nullptr));
-
-    for(int i = 100; i < 110; i++)
-    {
-        imageData.save(i);
-    }
+    return 0;
 
     for (int epoch = 0; epoch < 20; epoch++)
     {
