@@ -17,8 +17,6 @@ int main()
     std::string directory = "/Users/john/Projects/NeuralNetworkCPlusPlus/MNIST/";
     imageData.load(directory + "train-images-idx3-ubyte", directory + "train-labels-idx1-ubyte");
 
-    imageData.save(100);
-
     cop::NeuralNetwork network{imageData.getPixelsPerImage(), 256, 10};
 
     network.fit(imageData.getImageData(), imageData.getNumberImages(), imageData.getLabelData());
