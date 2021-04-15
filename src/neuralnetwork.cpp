@@ -1,10 +1,10 @@
 #include <random>
 #include <time.h>
 
-#include "network.h"
+#include "neuralnetwork.h"
 
 
-cop::Network::Network(std::initializer_list<int> layerSizes)
+cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
 {
     srand(time(NULL));
 
@@ -23,4 +23,9 @@ cop::Network::Network(std::initializer_list<int> layerSizes)
 
         n = m;
     }
+}
+
+void cop::NeuralNetwork::fit(double *pInput, int numberInputs, double *pExpected)
+{
+
 }

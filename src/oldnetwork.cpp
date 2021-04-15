@@ -7,7 +7,7 @@
 #include <deque>
 #include <math.h>
 
-std::ostream &cop::operator<<(std::ostream &out, const cop::Network &network)
+std::ostream &cop::operator<<(std::ostream &out, const cop::NeuralNetwork &network)
 {
     for (auto i = 0; i < network.w_.size(); i++)
     {
@@ -19,12 +19,12 @@ std::ostream &cop::operator<<(std::ostream &out, const cop::Network &network)
     return out;
 }
 
-double cop::Network::sigmoid(double input)
+double cop::NeuralNetwork::sigmoid(double input)
 {
     return 1.0 / (1.0 + exp(-input));
 }
 
-cop::Network::Network(std::initializer_list<size_t> layerSizes)
+cop::NeuralNetwork::NeuralNetwork(std::initializer_list<size_t> layerSizes)
 {
     //srand(time(NULL));
 
@@ -45,19 +45,19 @@ cop::Network::Network(std::initializer_list<size_t> layerSizes)
     }
 }
 
-double cop::Network::calculateCost(cop::Matrix<double> &input, cop::Matrix<double> &expected)
+double cop::NeuralNetwork::calculateCost(cop::Matrix<double> &input, cop::Matrix<double> &expected)
 {
     auto difference = input - expected;
 
     return 0.5 * ((~difference * difference)[0][0]);
 }
 
-cop::Matrix<double> cop::Network::calculateCostGradients(cop::Matrix<double> &input, cop::Matrix<double> &expected)
+cop::Matrix<double> cop::NeuralNetwork::calculateCostGradients(cop::Matrix<double> &input, cop::Matrix<double> &expected)
 {
     return (input - expected);
 }
 
-void cop::Network::rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<double> &expected)
+void cop::NeuralNetwork::rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<double> &expected)
 {
     const double inc = 0.00001;
     double &wrt = w_[0][0][0];
@@ -83,7 +83,7 @@ void cop::Network::rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<d
               << rate << std::endl;
 }
 
-void cop::Network::calculateOutput(std::vector<cop::Matrix<double>> &outputs, cop::Matrix<double> &input)
+void cop::NeuralNetwork::calculateOutput(std::vector<cop::Matrix<double>> &outputs, cop::Matrix<double> &input)
 {
     auto result = input;
     
@@ -94,12 +94,12 @@ void cop::Network::calculateOutput(std::vector<cop::Matrix<double>> &outputs, co
         auto &m = w_[i];
         auto &b = b_[i];
 
-        result = (m * result + b).transform(Network::sigmoid);
+        result = (m * result + b).transform(NeuralNetwork::sigmoid);
         outputs.push_back(result);
     }
 }
 
-void cop::Network::learn(std::vector<Matrix<double>> &outputs, cop::Matrix<double> *input, cop::Matrix<double> *expected)
+void cop::NeuralNetwork::learn(std::vector<Matrix<double>> &outputs, cop::Matrix<double> *input, cop::Matrix<double> *expected)
 {
     auto outputRateTransform = [](double value) { return value * (1.0 - value); };
 
@@ -127,7 +127,7 @@ void cop::Network::learn(std::vector<Matrix<double>> &outputs, cop::Matrix<doubl
     }
 }
 
-cop::Matrix<double> cop::Network::run(cop::Matrix<double> *input, cop::Matrix<double> *expected)
+cop::Matrix<double> cop::NeuralNetwork::run(cop::Matrix<double> *input, cop::Matrix<double> *expected)
 {
     std::vector<Matrix<double>> outputs;
 

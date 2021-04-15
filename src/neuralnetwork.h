@@ -6,7 +6,7 @@
 
 namespace cop
 {
-    class Network
+    class NeuralNetwork
     {
     private:
         std::vector<Matrix<double>> w_;
@@ -15,6 +15,7 @@ namespace cop
         double learningRate{0.01};
 
     public:
-        Network(std::initializer_list<int> layerSizes);
+        NeuralNetwork(std::initializer_list<int> layerSizes);
+        void fit(double *pInput, int numberInputs, double *pExpected);
     };
 }

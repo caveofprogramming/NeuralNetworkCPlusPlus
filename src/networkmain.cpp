@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "network.h"
+#include "neuralnetwork.h"
 #include "matrix.h"
-#include "imageloader.h"
+#include "imagedata.h"
 typedef cop::Matrix<double> Matrix;
 using namespace std;
 

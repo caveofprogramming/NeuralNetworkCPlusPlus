@@ -4,14 +4,51 @@
 #include <exception>
 #include <sstream>
 #include <iostream>
+#include <cmath>
 #include "bitmapfileheader.h"
 #include "bitmapinfoheader.h"
 
 cop::ImageData::~ImageData()
 {
-    delete[] byteImageData_;
-    delete[] doubleImageData_;
-    delete[] labels_;
+    delete[] imageData_;
+    delete[] labelData_;
+}
+
+int cop::ImageData::getLabel(int index)
+{
+    double *pData = labelData_ + (index * 10);
+
+    int result = 0;
+
+    for (int i = 0; i < 10; i++)
+    {
+        result <<= 1;
+
+        double value = *pData++;
+
+        if (value > 0.1)
+        {
+            result = i;
+            break;
+        }
+    }
+
+    return result;
+}
+
+double *cop::ImageData::getImageData()
+{
+    return imageData_;
+}
+
+double *cop::ImageData::getLabelData()
+{
+    return nullptr;
+}
+
+int cop::ImageData::getPixelsPerImage()
+{
+    return pixelsPerImage_;
 }
 
 void cop::ImageData::save(int index)
@@ -47,7 +84,7 @@ void cop::ImageData::save(int index)
     file.write((char *)&bmih, sizeof(bmih));
 
     // Palette
-    for(int i = 0xFF; i >= 0; --i)
+    for (int i = 0xFF; i >= 0; --i)
     {
         uint32_t color = ((i << 16) + (i << 8) + i);
         file.write((char *)&color, 4);
@@ -55,11 +92,11 @@ void cop::ImageData::save(int index)
 
     double *pBuffer = getImage(index);
 
-    for(int row = imageHeight_ - 1; row >= 0; --row)
+    for (int row = imageHeight_ - 1; row >= 0; --row)
     {
-        for(int col = 0; col < imageWidth_; col++)
+        for (int col = 0; col < imageWidth_; col++)
         {
-            uint8_t pixel = uint8_t(pBuffer[row * imageWidth_ + col] * 0xFF);   
+            uint8_t pixel = uint8_t(pBuffer[row * imageWidth_ + col] * 0xFF);
             file.write((char *)&pixel, 1);
         }
     }
@@ -95,14 +132,9 @@ int cop::ImageData::getHeight()
     return imageHeight_;
 }
 
-int cop::ImageData::getLabel(int index)
-{
-    return int(labels_[index]);
-}
-
 double *cop::ImageData::getImage(int index)
 {
-    return doubleImageData_ + pixelsPerImage_ * index;
+    return imageData_ + pixelsPerImage_ * index;
 }
 
 void cop::ImageData::load(std::string imageFileName, std::string labelFileName)
@@ -157,18 +189,33 @@ void cop::ImageData::load(std::string imageFileName, std::string labelFileName)
 
     int totalPixels = pixelsPerImage_ * numberImages_;
 
-    byteImageData_ = new uint8_t[totalPixels];
-    doubleImageData_ = new double[totalPixels];
-    labels_ = new uint8_t[numberLabels];
+    uint8_t *byteImageData = new uint8_t[totalPixels];
+    imageData_ = new double[totalPixels];
 
-    imageFile.read(reinterpret_cast<char *>(byteImageData_), totalPixels);
-    labelFile.read(reinterpret_cast<char *>(labels_), numberLabels);
+    uint8_t *byteLabelData = new uint8_t[numberLabels];
+    labelData_ = new double[numberImages_ * 10]{0};
+
+    imageFile.read(reinterpret_cast<char *>(byteImageData), totalPixels);
+    labelFile.read(reinterpret_cast<char *>(byteLabelData), numberLabels);
 
     imageFile.close();
     labelFile.close();
 
-    for(int i = 0; i < totalPixels; ++i)
+
+    for (int i = 0; i < totalPixels; ++i)
     {
-        doubleImageData_[i] = double(byteImageData_[i])/255.0;
+        imageData_[i] = double(byteImageData[i]) / 255.0;
     }
+
+    double *pLabel = labelData_;
+
+    for (int i = 0; i < numberImages_; i++)
+    {
+        uint8_t label = byteLabelData[i];
+        pLabel[label] = 1.0;
+        pLabel  += 10;
+    }
+
+    delete[] byteImageData;
+    delete[] byteLabelData;
 }

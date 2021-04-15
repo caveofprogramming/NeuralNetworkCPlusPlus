@@ -7,7 +7,7 @@ project("Neural Network"    VERSION 1.0
 set(SOURCE_DIR src)
 
 set(SRC_FILES   ${SOURCE_DIR}/main.cpp
-                ${SOURCE_DIR}/network.cpp
+                ${SOURCE_DIR}/neuralnetwork.cpp
                 ${SOURCE_DIR}/imagedata.cpp
                 ${SOURCE_DIR}/image.cpp
 )

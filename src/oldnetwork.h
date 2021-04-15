@@ -7,7 +7,7 @@
 
 namespace cop
 {
-    class Network
+    class NeuralNetwork
     {
     private:
         std::vector<Matrix<double>> w_;
@@ -26,11 +26,11 @@ namespace cop
         void setLearningRate(double rate) { learningRate = rate; };
         void rateOfCostChangeWrt(cop::Matrix<double> &input, cop::Matrix<double> &expected);
 
-        Network(std::initializer_list<size_t> layerSizes);
+        NeuralNetwork(std::initializer_list<size_t> layerSizes);
         cop::Matrix<double>  run(cop::Matrix<double> *input, cop::Matrix<double> *expected = nullptr);
         cop::Matrix<double> calculateCostGradients(cop::Matrix<double> &input, cop::Matrix<double> &expected);
 
-        friend std::ostream &operator<<(std::ostream &out, const cop::Network &network);
+        friend std::ostream &operator<<(std::ostream &out, const cop::NeuralNetwork &network);
     };
 
 } // namespace cop

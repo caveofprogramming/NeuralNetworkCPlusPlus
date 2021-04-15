@@ -12,9 +12,8 @@ namespace cop
         uint32_t imageSize = 0;
         uint32_t pixelsPerImage_ = 0;
 
-        uint8_t *labels_ = nullptr;
-        uint8_t *byteImageData_ = nullptr;
-        double *doubleImageData_ = nullptr;
+        double *imageData_ = nullptr;
+        double *labelData_ = nullptr;
 
     protected:
         static uint32_t readInt32(std::ifstream &file);
@@ -27,8 +26,11 @@ namespace cop
         int getNumberImages();
         int getWidth();
         int getHeight();
-        int getLabel(int index);
+        int getPixelsPerImage();
+        double *getImageData();
+        double *getLabelData();
         double *getImage(int index);
+        int getLabel(int index);
 
         ~ImageData();
     };
