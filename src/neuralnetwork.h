@@ -9,8 +9,8 @@ namespace cop
     class NeuralNetwork
     {
     private:
-        std::vector<Matrix<double>> w_;
-        std::vector<Matrix<double>> b_;
+        std::vector<Matrix> w_;
+        std::vector<Matrix> b_;
 
         double learningRate{0.01};
 

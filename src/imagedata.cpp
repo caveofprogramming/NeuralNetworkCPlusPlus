@@ -5,8 +5,11 @@
 #include <sstream>
 #include <iostream>
 #include <cmath>
+#include <memory>
+#include <vector>
 #include "bitmapfileheader.h"
 #include "bitmapinfoheader.h"
+
 
 cop::ImageData::~ImageData()
 {
@@ -189,18 +192,18 @@ void cop::ImageData::load(std::string imageFileName, std::string labelFileName)
 
     int totalPixels = pixelsPerImage_ * numberImages_;
 
-    uint8_t *byteImageData = new uint8_t[totalPixels];
+    std::unique_ptr<uint8_t[]> byteImageData(new uint8_t[totalPixels]);
+    std::unique_ptr<uint8_t[]> byteLabelData(new uint8_t[numberLabels]);
+
     imageData_ = new double[totalPixels];
 
-    uint8_t *byteLabelData = new uint8_t[numberLabels];
     labelData_ = new double[numberImages_ * 10]{0};
 
-    imageFile.read(reinterpret_cast<char *>(byteImageData), totalPixels);
-    labelFile.read(reinterpret_cast<char *>(byteLabelData), numberLabels);
+    imageFile.read(reinterpret_cast<char *>(byteImageData.get()), totalPixels);
+    labelFile.read(reinterpret_cast<char *>(byteLabelData.get()), numberLabels);
 
     imageFile.close();
     labelFile.close();
-
 
     for (int i = 0; i < totalPixels; ++i)
     {
@@ -215,7 +218,4 @@ void cop::ImageData::load(std::string imageFileName, std::string labelFileName)
         pLabel[label] = 1.0;
         pLabel  += 10;
     }
-
-    delete[] byteImageData;
-    delete[] byteLabelData;
 }
