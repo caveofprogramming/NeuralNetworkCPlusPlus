@@ -47,6 +47,12 @@ namespace cop
             v_ = new double[rows * cols];
         }
 
+        Matrix(int rows, double *pData) : rows_(rows), cols_(1)
+        {
+            v_ = new double[rows];
+            memcpy(v_, pData, rows);
+        }
+
         Matrix(std::initializer_list<std::initializer_list<double>> init)
         {
             rows_ = init.size();
@@ -80,6 +86,11 @@ namespace cop
             return rows_;
         }
 
+        int cols()
+        {
+            return cols_;
+        }
+
         void add(const Matrix &result, const Matrix &addend)
         {
             if(result.rows_ != rows_ || result.cols_ != cols_)
@@ -105,13 +116,16 @@ namespace cop
             {
                 std::stringstream message;
                 message << "Cannot multiply matrixes." << std::endl;
-                message << "Multiplicand (" << rows_ << "," << cols_ << ")" << std::endl;
-                message << "Multiplier (" << multiplier.rows_ << "," << multiplier.cols_ << ")" << std::endl;
-                message << "Result (" << result.rows_ << "," << result.cols_ << ")" << std::endl;
+                message << "Multiplicand: " << toString() << std::endl;
+                message << "Multiplier: " << multiplier.toString() << std::endl;
+                message << "Result: " << result.toString() << std::endl;
                
                 throw std::runtime_error(message.str());
             }
 
+            for(int i = 0; i < rows_ * multiplier.cols_ * cols_; ++i){}
+
+/*
             for (int row = 0; row < rows_; ++row)
             {
                 for (int col = 0; col < multiplier.cols_; ++col)
@@ -120,12 +134,22 @@ namespace cop
 
                     for (int n = 0; n < cols_; n++)
                     {
-                        sum += v_[row * cols_ + n] * multiplier.v_[n * multiplier.cols_ + col];
+                        //sum += v_[row * cols_ + n] * multiplier.v_[n * multiplier.cols_ + col];
                     }
 
-                    result.v_[row * multiplier.cols_ + col] = sum;
+                    //result.v_[row * multiplier.cols_ + col] = sum;
                 }
             }
+*/
+        }
+
+        std::string toString() const
+        {
+            std::stringstream ss;
+
+            ss << "(" << rows_ << "," << cols_ << ")";
+
+            return ss.str();
         }
 
         friend std::ostream &operator<<(std::ostream &out, const Matrix &m)

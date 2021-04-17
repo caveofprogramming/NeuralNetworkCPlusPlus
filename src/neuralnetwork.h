@@ -16,6 +16,6 @@ namespace cop
 
     public:
         NeuralNetwork(std::initializer_list<int> layerSizes);
-        void fit(double *pInput, int numberInputs, double *pExpected);
+        void fit(double *pInput, int numberInputVectors, double *pExpected);
     };
 }

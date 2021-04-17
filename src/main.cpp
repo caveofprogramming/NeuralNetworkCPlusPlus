@@ -21,12 +21,5 @@ int main()
 
     network.fit(imageData.getImageData(), imageData.getNumberImages(), imageData.getLabelData());
 
-    for (int epoch = 0; epoch < 20; epoch++)
-    {
-        for (int imageIndex = 0; imageIndex < imageData.getNumberImages(); imageIndex++)
-        {
-        }
-    }
-
     return 0;
 }

@@ -25,25 +25,35 @@ cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
     }
 }
 
-void cop::NeuralNetwork::fit(double *pInput, int numberInputs, double *pExpected)
+void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pExpected)
 {
-    int inputVectorSize = w_[0].rows();
-
-    cop::Matrix input(inputVectorSize, 1);
+    int inputRows = w_[0].cols();
 
     double *pInputVector = pInput;
-    int numberInputBytes = sizeof(double) * inputVectorSize;
 
-    for (int i = 0; i < numberInputs; i++)
+    std::vector<cop::Matrix> layerIo;
+
+    for(int i = 0; i < w_.size(); i++)
     {
-        input.setData(pInputVector, numberInputBytes);
+        layerIo.push_back(cop::Matrix(w_[i].cols(), 1));
+    }
 
+    layerIo[0].setData(pInput, inputRows * sizeof(double));
+    layerIo.push_back(cop::Matrix(w_.back().rows(), 1));
+
+    for (int i = 0; i < numberInputVectors; i++)
+    {
+        if(i % 100 == 0) std::cout << "." << std::flush;
         for(int layer = 0; layer < w_.size(); layer++)
         {
             auto &weights = w_[layer];
             auto &biases = b_[layer];
+            auto &input = layerIo[layer];
+            auto &output = layerIo[layer + 1];
+
+            weights.multiply(output, input);
         }
 
-        pInputVector += inputVectorSize;
+        pInputVector += inputRows;
     }
 }
