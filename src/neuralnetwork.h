@@ -12,10 +12,20 @@ namespace cop
         std::vector<Matrix> w_;
         std::vector<Matrix> b_;
 
-        double learningRate{0.01};
+        double learningRate_ = 0.01;
+        int batchSize_ = 1;
+        int epochs_ = 20;
+
+        std::ostream &log_  = std::cout;
+
+    protected:
+        void runEpoch(double *pInput, int numberInputVectors, double *pExpected);
+        void runBatch(double *pInput, int numberInputVectors, double *pExpected);
+        void computeOutputs(std::vector<cop::Matrix> &outputs, double *pInput, int numberInputVectors, double *pExpected);
 
     public:
         NeuralNetwork(std::initializer_list<int> layerSizes);
         void fit(double *pInput, int numberInputVectors, double *pExpected);
+        void setBatchSize(int batchSize) { batchSize_ = batchSize; }
     };
 }

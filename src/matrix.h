@@ -91,41 +91,42 @@ namespace cop
             return cols_;
         }
 
-        void add(const Matrix &result, const Matrix &addend)
+        double *data()
         {
-            if(result.rows_ != rows_ || result.cols_ != cols_)
+            return v_;
+        }
+
+        void addTo(const Matrix &addend)
+        {
+            if (addend.rows_ != rows_ || addend.cols_ != cols_)
             {
                 std::stringstream message;
                 message << "Cannot add matrixes." << std::endl;
                 message << "Addend 1 (" << rows_ << "," << cols_ << ")" << std::endl;
                 message << "Addend 2 (" << addend.rows_ << "," << addend.cols_ << ")" << std::endl;
-                message << "Result (" << result.rows_ << "," << result.cols_ << ")" << std::endl;
-               
+
                 throw std::runtime_error(message.str());
             }
 
-            for(int i = 0; i < rows_ * cols_; i++)
+            for (int i = 0; i < rows_ * cols_; i++)
             {
-                result.v_[i] = v_[i] + addend.v_[i];
+                v_[i] += addend.v_[i];
             }
         }
 
         void multiply(const Matrix &result, const Matrix &multiplier)
         {
-            if(result.rows_ != rows_ || result.cols_ != multiplier.cols_)
+            if (result.rows_ != rows_ || result.cols_ != multiplier.cols_ || cols_ != multiplier.rows_)
             {
                 std::stringstream message;
                 message << "Cannot multiply matrixes." << std::endl;
                 message << "Multiplicand: " << toString() << std::endl;
                 message << "Multiplier: " << multiplier.toString() << std::endl;
                 message << "Result: " << result.toString() << std::endl;
-               
+
                 throw std::runtime_error(message.str());
             }
 
-            for(int i = 0; i < rows_ * multiplier.cols_ * cols_; ++i){}
-
-/*
             for (int row = 0; row < rows_; ++row)
             {
                 for (int col = 0; col < multiplier.cols_; ++col)
@@ -134,13 +135,12 @@ namespace cop
 
                     for (int n = 0; n < cols_; n++)
                     {
-                        //sum += v_[row * cols_ + n] * multiplier.v_[n * multiplier.cols_ + col];
+                        sum += v_[row * cols_ + n] * multiplier.v_[n * multiplier.cols_ + col];
                     }
 
-                    //result.v_[row * multiplier.cols_ + col] = sum;
+                    result.v_[row * multiplier.cols_ + col] = sum;
                 }
             }
-*/
         }
 
         std::string toString() const
