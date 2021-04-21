@@ -1,5 +1,7 @@
 #include <random>
 #include <time.h>
+#include <thread>
+#include <future>
 
 #include "activations.h"
 #include "neuralnetwork.h"
@@ -26,7 +28,22 @@ cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
     }
 }
 
-void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &outputs, double *pInput, int numberInputVectors, double *pExpected)
+void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo, double *pInput)
+{
+    for (int layer = 0; layer < w_.size(); layer++)
+    {
+        auto &weights = w_[layer];
+        auto &biases = b_[layer];
+        auto &input = layerIo[layer];
+        auto &output = layerIo[layer + 1];
+
+        weights.multiply(output, input);
+        output.addTo(biases);
+        cop::softmax(output.data(), output.rows());
+    }
+}
+
+void cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double *pExpected)
 {
     int inputRows = w_[0].cols();
 
@@ -39,61 +56,77 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &outputs, doubl
         layerIo.push_back(cop::Matrix(w_[i].cols(), 1));
     }
 
-    layerIo[0].setData(pInput, inputRows * sizeof(double));
     layerIo.push_back(cop::Matrix(w_.back().rows(), 1));
-
-    const int progressCount = numberInputVectors / 100 + 1;
 
     for (int i = 0; i < numberInputVectors; i++)
     {
-        if (i % progressCount == 0)
-        {
-            log_ << "." << std::flush;
-        }
+        layerIo[0].setData(pInput, inputRows * sizeof(double));
 
-        for (int layer = 0; layer < w_.size(); layer++)
-        {
-            auto &weights = w_[layer];
-            auto &biases = b_[layer];
-            auto &input = layerIo[layer];
-            auto &output = layerIo[layer + 1];
-
-            weights.multiply(output, input);
-            output.addTo(biases);
-            cop::softmax(output.data(), output.rows());
-        }
+        computeOutputs(layerIo, pInputVector);
 
         pInputVector += inputRows;
     }
-}
-
-void cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double *pExpected)
-{
 }
 
 void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double *pExpected)
 {
     const int inputVectorSize = w_[0].cols();
 
-    int numberBatches = numberInputVectors / batchSize_;
-    int lastBatchSize = numberInputVectors % batchSize_;
+    const int numberBatches = numberInputVectors / batchSize_;
+    const int lastBatchSize = numberInputVectors % batchSize_;
 
     double *pBatchInput = pInput;
     double *pBatchExpected = pExpected;
     const int outputSize = w_.back().rows();
+    int batchSize = batchSize_;
 
-    for (int i = 0; i < numberBatches; ++i)
+
+/*
+    std::thread t(launch::async, [&]() {
+        for (int i = 0; i < numberBatches; ++i)
+        {
+            if (i == numberBatches - 1 && lastBatchSize != 0)
+            {
+                batchSize = lastBatchSize;
+            }
+
+            
+            std::shared_future<int> f = std::async(
+                launch::async, [](int i) { return 0; }, i);
+
+            futures.push(f);
+            
+            //runBatch(pBatchInput, batchSize, pBatchExpected);
+
+            pBatchInput += (inputVectorSize * batchSize_);
+            pBatchExpected += outputSize * batchSize_;
+
+            if (i % logInterval_ == 0)
+            {
+                log_ << "." << std::flush;
+            }
+        }
+    });
+    */
+
+    /*
+    t.join();
+
+    for (int i = 0; i < 20; i++)
     {
-        runBatch(pBatchInput, batchSize_, pBatchExpected);
-
-        pBatchInput += (inputVectorSize * batchSize_);
-        pBatchExpected += outputSize * batchSize_;
+        std::shared_future<int> f = futures.front();
+        int value = f.get();
+        futures.pop();
+        cout << "Returned: " << value << endl;
     }
+    */
+    time_t startTime = time(nullptr);
 
-    if (lastBatchSize != 0)
-    {
-        runBatch(pBatchInput, lastBatchSize, pBatchExpected);
-    }
+    time_t endTime = time(nullptr);
+    int duration = endTime - startTime;
+
+    log_ << std::endl
+         << duration << " seconds" << std::endl;
 }
 
 void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pExpected)
@@ -101,6 +134,8 @@ void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pEx
     log_ << "Batch size: " << batchSize_ << std::endl;
     log_ << "Number of inputs: " << numberInputVectors << std::endl;
     log_ << std::endl;
+
+    logInterval_ = int(numberInputVectors / (80.0 * batchSize_)) + 1;
 
     for (int i = 0; i < epochs_; i++)
     {

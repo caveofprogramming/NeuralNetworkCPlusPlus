@@ -15,13 +15,14 @@ namespace cop
         double learningRate_ = 0.01;
         int batchSize_ = 1;
         int epochs_ = 20;
+        int logInterval_ = 1;
 
         std::ostream &log_  = std::cout;
 
     protected:
         void runEpoch(double *pInput, int numberInputVectors, double *pExpected);
         void runBatch(double *pInput, int numberInputVectors, double *pExpected);
-        void computeOutputs(std::vector<cop::Matrix> &outputs, double *pInput, int numberInputVectors, double *pExpected);
+        void computeOutputs(std::vector<cop::Matrix> &layerIo, double *pInput);
 
     public:
         NeuralNetwork(std::initializer_list<int> layerSizes);
