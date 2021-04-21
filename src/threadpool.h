@@ -34,13 +34,11 @@ namespace cop
         void start()
         {
             std::thread t([this]() {
-                int i = 0;
-
                 for (auto task : tasks_)
                 {
                     std::unique_lock<std::mutex> lock(mtx_);
                     cond_.wait(lock, [this]() {
-                        return futures_.size() + 1 < numberThreads_ || numberThreads_ == 1;
+                        return int(futures_.size()) + 1 < numberThreads_ || numberThreads_ == 1;
                     });
 
                     std::shared_future<T> f = async(std::launch::async, task);

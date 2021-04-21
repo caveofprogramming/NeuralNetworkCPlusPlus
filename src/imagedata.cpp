@@ -97,7 +97,7 @@ void cop::ImageData::save(int index)
 
     for (int row = imageHeight_ - 1; row >= 0; --row)
     {
-        for (int col = 0; col < imageWidth_; col++)
+        for (uint32_t col = 0; col < imageWidth_; col++)
         {
             uint8_t pixel = uint8_t(pBuffer[row * imageWidth_ + col] * 0xFF);
             file.write((char *)&pixel, 1);
@@ -212,7 +212,7 @@ void cop::ImageData::load(std::string imageFileName, std::string labelFileName)
 
     double *pLabel = labelData_;
 
-    for (int i = 0; i < numberImages_; i++)
+    for (uint32_t i = 0; i < numberImages_; i++)
     {
         uint8_t label = byteLabelData[i];
         pLabel[label] = 1.0;

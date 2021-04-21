@@ -27,9 +27,9 @@ cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
     }
 }
 
-void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo, double *pInput)
+void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
 {
-    for (int layer = 0; layer < w_.size(); layer++)
+    for (auto layer = 0; layer < int(w_.size()); layer++)
     {
         auto &weights = w_[layer];
         auto &biases = b_[layer];
@@ -52,7 +52,7 @@ int cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double 
 
     std::vector<cop::Matrix> layerIo;
 
-    for (int i = 0; i < w_.size(); i++)
+    for (int i = 0; i < int(w_.size()); i++)
     {
         layerIo.push_back(cop::Matrix(w_[i].cols(), 1));
     }
@@ -63,10 +63,13 @@ int cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double 
     {
         layerIo[0].setData(pInput, inputRows * sizeof(double));
 
-        computeOutputs(layerIo, pInputVector);
+        computeOutputs(layerIo);
 
         pInputVector += inputRows;
     }
+
+    // TODO unused warning disabled via useless code.
+    pExpected = nullptr;
 
     return 0;
 }
@@ -114,6 +117,9 @@ void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double
     for (int i = 0; i < numberBatches; ++i)
     {
         auto result = threadPool.get();
+
+        // TODO unused variable warning disabled by useless code.
+        result = 0;
     }
     
     threadPool.awaitComplete();
