@@ -37,8 +37,10 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo, doubl
         auto &output = layerIo[layer + 1];
 
         weights.multiply(output, input);
+        
         output.addTo(biases);
         cop::softmax(output.data(), output.rows());
+        
     }
 }
 

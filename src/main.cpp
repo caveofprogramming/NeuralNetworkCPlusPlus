@@ -17,6 +17,11 @@ using namespace std::chrono_literals;
 
 int main()
 {
+    std::time_t end = time(nullptr);
+
+    std::cout << "Duration: " << (end - start) << std::endl;
+
+    return 0;
     auto init = [](int, int) {
         return 0.0;
     };

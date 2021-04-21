@@ -133,12 +133,14 @@ namespace cop
                 {
                     double sum = 0.0;
 
+                    
                     for (int n = 0; n < cols_; n++)
                     {
-                        sum += v_[row * cols_ + n] * multiplier.v_[n * multiplier.cols_ + col];
+                        //sum += v_[row * cols_ + n] * multiplier.v_[n * multiplier.cols_ + col];
                     }
 
                     result.v_[row * multiplier.cols_ + col] = sum;
+                 
                 }
             }
         }
