@@ -1,9 +1,12 @@
 #include <random>
 #include <time.h>
 #include <thread>
+#include <chrono>
 #include "threadpool.h"
 #include "activations.h"
 #include "neuralnetwork.h"
+
+using namespace std::chrono;
 
 cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
 {
@@ -37,10 +40,9 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
         auto &output = layerIo[layer + 1];
 
         weights.multiply(output, input);
-        
+
         output.addTo(biases);
         cop::softmax(output.data(), output.rows());
-        
     }
 }
 
@@ -76,7 +78,7 @@ int cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double 
 
 void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double *pExpected)
 {
-    time_t startTime = time(nullptr);
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     const int inputVectorSize = w_[0].cols();
 
@@ -121,14 +123,14 @@ void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double
         // TODO unused variable warning disabled by useless code.
         result = 0;
     }
-    
+
     threadPool.awaitComplete();
 
-    time_t endTime = time(nullptr);
-    int duration = endTime - startTime;
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    duration<double, std::milli> duration = t2 - t1;
 
     log_ << std::endl
-         << duration << " seconds" << std::endl;
+         << duration.count() << " ms" << std::endl;
 }
 
 void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pExpected)

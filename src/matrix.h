@@ -126,23 +126,32 @@ namespace cop
 
                 throw std::runtime_error(message.str());
             }
+            
+            double sum = 0.0;
+
+            double *pThisData = v_;
+            double *pResultData = result.v_;
 
             for (int row = 0; row < rows_; ++row)
             {
                 for (int col = 0; col < multiplier.cols_; ++col)
                 {
-                    double sum = 0.0;
+                    sum = 0.0;
 
                     for (int n = 0; n < cols_; n++)
                     {
-                        sum += v_[row * cols_ + n] * multiplier.v_[n * multiplier.cols_ + col];
+                        sum += pThisData[n] * multiplier.v_[n * multiplier.cols_ + col];
                     }
 
-                    result.v_[row * multiplier.cols_ + col] = sum;
-                 
+                    pResultData[col] = sum;
                 }
+
+                pThisData += cols_;
+                pResultData += multiplier.cols_;
             }
         }
+
+        
 
         std::string toString() const
         {
