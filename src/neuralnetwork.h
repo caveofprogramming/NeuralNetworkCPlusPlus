@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "matrix.h"
+#include "threadpool.h"
 
 namespace cop
 {
@@ -21,7 +22,7 @@ namespace cop
 
     protected:
         void runEpoch(double *pInput, int numberInputVectors, double *pExpected);
-        void runBatch(double *pInput, int numberInputVectors, double *pExpected);
+        int runBatch(double *pInput, int numberInputVectors, double *pExpected);
         void computeOutputs(std::vector<cop::Matrix> &layerIo, double *pInput);
 
     public:

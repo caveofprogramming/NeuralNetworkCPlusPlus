@@ -43,7 +43,6 @@ namespace cop
                         return futures_.size() + 1 < numberThreads_ || numberThreads_ == 1;
                     });
 
-                    std::cout << "Running " << ++i << std::endl;
                     std::shared_future<T> f = async(std::launch::async, task);
                     futures_.push(f);
 
