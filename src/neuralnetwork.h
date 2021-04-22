@@ -13,7 +13,7 @@ namespace cop
         std::vector<Matrix> w_;
         std::vector<Matrix> b_;
 
-        //double learningRate_ = 0.01;
+        //float learningRate_ = 0.01;
         int batchSize_ = 1;
         int epochs_ = 20;
         int logInterval_ = 1;
@@ -21,13 +21,13 @@ namespace cop
         std::ostream &log_  = std::cout;
 
     protected:
-        void runEpoch(double *pInput, int numberInputVectors, double *pExpected);
-        int runBatch(double *pInput, int numberInputVectors, double *pExpected);
+        void runEpoch(float *pInput, int numberInputVectors, float *pExpected);
+        int runBatch(float *pInput, int numberInputVectors, float *pExpected);
         void computeOutputs(std::vector<cop::Matrix> &layerIo);
 
     public:
         NeuralNetwork(std::initializer_list<int> layerSizes);
-        void fit(double *pInput, int numberInputVectors, double *pExpected);
+        void fit(float *pInput, int numberInputVectors, float *pExpected);
         void setBatchSize(int batchSize) { batchSize_ = batchSize; }
     };
 }

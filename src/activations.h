@@ -5,11 +5,11 @@
 
 namespace cop
 {
-    void softmax(double *pData, int nItems)
+    void softmax(float *pData, int nItems)
     {
-        double sum = 0;
-        double result = 0;
-        double *pValue = pData;
+        float sum = 0;
+        float result = 0;
+        float *pValue = pData;
 
         for (int i = 0; i < nItems; i++)
         {

@@ -46,11 +46,11 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
     }
 }
 
-int cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double *pExpected)
+int cop::NeuralNetwork::runBatch(float *pInput, int numberInputVectors, float *pExpected)
 {
     int inputRows = w_[0].cols();
 
-    double *pInputVector = pInput;
+    float *pInputVector = pInput;
 
     std::vector<cop::Matrix> layerIo;
 
@@ -63,7 +63,7 @@ int cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double 
 
     for (int i = 0; i < numberInputVectors; i++)
     {
-        layerIo[0].setData(pInput, inputRows * sizeof(double));
+        layerIo[0].setData(pInput, inputRows * sizeof(float));
 
         computeOutputs(layerIo);
 
@@ -76,7 +76,7 @@ int cop::NeuralNetwork::runBatch(double *pInput, int numberInputVectors, double 
     return 0;
 }
 
-void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double *pExpected)
+void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *pExpected)
 {
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
@@ -85,8 +85,8 @@ void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double
     const int numberBatches = numberInputVectors / batchSize_;
     const int lastBatchSize = numberInputVectors % batchSize_;
 
-    double *pBatchInput = pInput;
-    double *pBatchExpected = pExpected;
+    float *pBatchInput = pInput;
+    float *pBatchExpected = pExpected;
     const int outputSize = w_.back().rows();
     int batchSize = batchSize_;
 
@@ -127,13 +127,13 @@ void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double
     threadPool.awaitComplete();
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    duration<double, std::milli> duration = t2 - t1;
+    duration<float, std::milli> duration = t2 - t1;
 
     log_ << std::endl
          << duration.count() << " ms" << std::endl;
 }
 
-void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pExpected)
+void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpected)
 {
     log_ << "Batch size: " << batchSize_ << std::endl;
     log_ << "Number of inputs: " << numberInputVectors << std::endl;

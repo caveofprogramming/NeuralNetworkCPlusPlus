@@ -6,7 +6,7 @@
 #include <string>
 
 #include "neuralnetwork.h"
-#include "imagedata.h"
+#include "imageloader.h"
 #include "threadpool.h"
 #include "matrix.h"
 
@@ -14,10 +14,21 @@ typedef std::vector<std::string> strings;
 
 using namespace std::chrono_literals;
 
-
 int main()
 {
-    cop::ImageData imageData;
+    cop::Matrix m1 = {
+        {1, 2},
+        {3, 4},
+        {5, 6}};
+
+    cop::Matrix m2 = {
+        {1, 2},
+        {3, 4},
+    };
+
+    std::cout << m1 * m2 << std::endl;
+
+    cop::ImageLoader imageData;
 
     std::string directory = "/Users/john/Projects/NeuralNetworkCPlusPlus/MNIST/";
     imageData.load(directory + "train-images-idx3-ubyte", directory + "train-labels-idx1-ubyte");
@@ -31,8 +42,8 @@ int main()
     const int inputSize = 3;
     const int numberInputs = 20;
 
-    double input[numberInputs * inputSize];
-    double output[numberInputs];
+    float input[numberInputs * inputSize];
+    float output[numberInputs];
 
     srand(time(nullptr));
 
@@ -40,10 +51,10 @@ int main()
     {
         for(int j = 0; j < inputSize; j++)
         {
-            input[i * inputSize + j] = double(rand())/RAND_MAX;
+            input[i * inputSize + j] = float(rand())/RAND_MAX;
         }
 
-        output[i] = double(rand())/RAND_MAX;
+        output[i] = float(rand())/RAND_MAX;
     }
 
     cop::NeuralNetwork network{inputSize, 4, 1};

@@ -4,15 +4,18 @@ project("Neural Network"    VERSION 1.0
                             DESCRIPTION "Neural network in C++"
                             LANGUAGES CXX)
 
-set(CMAKE_BUILD_TYPE Release) 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+
+IF(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")   
+ENDIF()
 
 set(SOURCE_DIR src)
 
 set(SRC_FILES   ${SOURCE_DIR}/main.cpp
                 ${SOURCE_DIR}/neuralnetwork.cpp
-                ${SOURCE_DIR}/imagedata.cpp
+                ${SOURCE_DIR}/imageloader.cpp
                 ${SOURCE_DIR}/image.cpp
 )
 

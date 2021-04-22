@@ -12,7 +12,7 @@ namespace cop
     class Matrix
     {
     private:
-        double *v_ = nullptr;
+        float *v_ = nullptr;
         int rows_ = 0;
         int cols_ = 0;
 
@@ -29,9 +29,9 @@ namespace cop
             other.cols_ = 0;
         }
 
-        Matrix(int rows, int cols, std::function<double(int, int)> init) : rows_(rows), cols_(cols)
+        Matrix(int rows, int cols, std::function<float(int, int)> init) : rows_(rows), cols_(cols)
         {
-            v_ = new double[rows_ * cols_];
+            v_ = new float[rows_ * cols_];
 
             for (int row = 0; row < rows; row++)
             {
@@ -44,21 +44,21 @@ namespace cop
 
         Matrix(int rows, int cols) : rows_(rows), cols_(cols)
         {
-            v_ = new double[rows * cols];
+            v_ = new float[rows * cols];
         }
 
-        Matrix(int rows, double *pData) : rows_(rows), cols_(1)
+        Matrix(int rows, float *pData) : rows_(rows), cols_(1)
         {
-            v_ = new double[rows];
+            v_ = new float[rows];
             memcpy(v_, pData, rows);
         }
 
-        Matrix(std::initializer_list<std::initializer_list<double>> init)
+        Matrix(std::initializer_list<std::initializer_list<float>> init)
         {
             rows_ = init.size();
             cols_ = init.begin()->size();
 
-            v_ = new double[rows_ * cols_];
+            v_ = new float[rows_ * cols_];
 
             int index = 0;
 
@@ -76,7 +76,7 @@ namespace cop
             delete[] v_;
         }
 
-        void setData(double *pData, int nBytes)
+        void setData(float *pData, int nBytes)
         {
             memcpy(v_, pData, nBytes);
         }
@@ -91,7 +91,7 @@ namespace cop
             return cols_;
         }
 
-        double *data()
+        float *data()
         {
             return v_;
         }
@@ -114,6 +114,57 @@ namespace cop
             }
         }
 
+        void operator=(Matrix &&other)
+        {
+            v_ = other.v_;
+            rows_ = other.rows_;
+            cols_ = other.cols_;
+            other.v_ = nullptr;
+            other.rows_ = 0;
+            other.cols_ = 0;
+        }
+
+        /*
+         * Transpose
+         */
+        void operator~()
+        {
+            for(int row = 0; row < rows_; ++row)
+            {
+                for(int col = 0; col < cols_; ++col)
+                {
+                   
+                }
+            }
+        }
+
+        Matrix operator*(const Matrix &multiplier)
+        {
+            Matrix result(rows_, multiplier.cols_);
+
+            float *pThis = v_;
+            float *pMultiplier = multiplier.v_;
+            float *pResult = result.v_;
+            float sum = 0;
+
+            for(int row = 0; row < rows_; row++)
+            {
+                for(int col = 0; col < multiplier.cols_; col++)
+                {
+                    sum = 0;
+
+                    for(int n = 0; n < cols_; n++)
+                    {
+                        sum += pThis[row * cols_ + n] * pMultiplier[multiplier.cols_ * n + col];
+                    }
+
+                    pResult[multiplier.cols_ * row + col] = sum;
+                }
+            }
+
+            return result;
+        }
+
         void multiply(const Matrix &result, const Matrix &multiplier)
         {
             if (result.rows_ != rows_ || result.cols_ != multiplier.cols_ || cols_ != multiplier.rows_)
@@ -127,10 +178,10 @@ namespace cop
                 throw std::runtime_error(message.str());
             }
             
-            double sum = 0.0;
+            float sum = 0.0;
 
-            double *pThisData = v_;
-            double *pResultData = result.v_;
+            float *pThisData = v_;
+            float *pResultData = result.v_;
 
             for (int row = 0; row < rows_; ++row)
             {

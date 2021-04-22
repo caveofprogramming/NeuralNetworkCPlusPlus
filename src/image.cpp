@@ -14,7 +14,7 @@ char *cop::Image::get()
     return pixels.data();
 }
 
-double cop::Image::operator[](int index)
+float cop::Image::operator[](int index)
 {
     return pixels[index];
 }

@@ -22,7 +22,7 @@ namespace cop
         char getLabel() { return label; };
 
         bool save(std::string filename);
-        double operator[](int index);
+        float operator[](int index);
 
         
     };
