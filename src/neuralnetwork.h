@@ -17,6 +17,7 @@ namespace cop
         int batchSize_ = 1;
         int epochs_ = 20;
         int logInterval_ = 1;
+        int workers_ = 1;
 
         std::ostream &log_  = std::cout;
 
@@ -26,8 +27,10 @@ namespace cop
         void computeOutputs(std::vector<cop::Matrix> &layerIo);
 
     public:
+
         NeuralNetwork(std::initializer_list<int> layerSizes);
         void fit(float *pInput, int numberInputVectors, float *pExpected);
         void setBatchSize(int batchSize) { batchSize_ = batchSize; }
+        void setWorkers(int workers) { workers_ = workers; };
     };
 }

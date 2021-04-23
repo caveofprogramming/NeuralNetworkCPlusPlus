@@ -8,13 +8,15 @@
 #include <exception>
 #include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace cop
 {
     class Matrix
     {
     private:
-        float *v_ = nullptr;
+        std::vector<float> e_;
+
         int rows_ = 0;
         int cols_ = 0;
 
@@ -23,36 +25,41 @@ namespace cop
 
         Matrix(Matrix &&other)
         {
-            v_ = other.v_;
+            *this = std::move(other);
+        }
+
+        void operator=(Matrix &&other)
+        {
+            e_ = std::move(other.e_);
+
             rows_ = other.rows_;
             cols_ = other.cols_;
-            other.v_ = nullptr;
             other.rows_ = 0;
             other.cols_ = 0;
         }
 
         Matrix(int rows, int cols, std::function<float(int, int)> init) : rows_(rows), cols_(cols)
         {
-            v_ = new float[rows_ * cols_];
+            e_.resize(rows_ * cols_);
 
             for (int row = 0; row < rows; row++)
             {
                 for (int col = 0; col < cols; col++)
                 {
-                    v_[row * cols_ + col] = init(row, col);
+                    e_.data()[row * cols_ + col] = init(row, col);
                 }
             }
         }
 
         Matrix(int rows, int cols) : rows_(rows), cols_(cols)
         {
-            v_ = new float[rows * cols];
+            e_.resize(rows * cols);
         }
 
         Matrix(int rows, float *pData) : rows_(rows), cols_(1)
         {
-            v_ = new float[rows];
-            memcpy(v_, pData, rows);
+            e_.resize(rows);
+            memcpy(e_.data(), pData, rows);
         }
 
         Matrix(std::initializer_list<std::initializer_list<float>> init)
@@ -60,7 +67,7 @@ namespace cop
             rows_ = init.size();
             cols_ = init.begin()->size();
 
-            v_ = new float[rows_ * cols_];
+            e_.resize(rows_ * cols_);
 
             int index = 0;
 
@@ -68,19 +75,18 @@ namespace cop
             {
                 for (auto value : row)
                 {
-                    v_[index++] = value;
+                    e_.data()[index++] = value;
                 }
             }
         }
 
         ~Matrix()
         {
-            delete[] v_;
         }
 
         void setData(float *pData, int nBytes)
         {
-            memcpy(v_, pData, nBytes);
+            memcpy(e_.data(), pData, nBytes);
         }
 
         int rows()
@@ -95,40 +101,17 @@ namespace cop
 
         float *data()
         {
-            return v_;
+            return e_.data();
         }
 
-        void addTo(const Matrix &addend)
+        const float *operator[](int index) const
         {
-            if (addend.rows_ != rows_ || addend.cols_ != cols_)
-            {
-                std::stringstream message;
-                message << "Cannot add matrixes." << std::endl;
-                message << "Addend 1 (" << rows_ << "," << cols_ << ")" << std::endl;
-                message << "Addend 2 (" << addend.rows_ << "," << addend.cols_ << ")" << std::endl;
-
-                throw std::runtime_error(message.str());
-            }
-
-            for (int i = 0; i < rows_ * cols_; i++)
-            {
-                v_[i] += addend.v_[i];
-            }
+            return e_.data() + (index * cols_);
         }
 
-        void operator=(Matrix &&other)
+        float *operator[](int index)
         {
-            v_ = other.v_;
-            rows_ = other.rows_;
-            cols_ = other.cols_;
-            other.v_ = nullptr;
-            other.rows_ = 0;
-            other.cols_ = 0;
-        }
-
-        float *operator[](int index) const
-        {
-            return v_ + (index * cols_);
+            return e_.data() + (index * cols_);
         }
 
         /*
@@ -160,14 +143,14 @@ namespace cop
 
                 throw std::runtime_error(message.str());
             }
-            
+
             Matrix result(rows_, cols_);
 
-            float *pThisData = v_;
-            float *pAddendData = addend.v_;
-            float *pResultData = result.v_;
+            const float *pThisData = e_.data();
+            const float *pAddendData = addend.e_.data();
+            float *pResultData = result.e_.data();
 
-            for(int i = 0; i < rows_*cols_; i++)
+            for (int i = 0; i < rows_ * cols_; i++)
             {
                 *pResultData++ = *pThisData++ + *pAddendData++;
             }
@@ -214,13 +197,11 @@ namespace cop
         {
             out << std::showpos << std::fixed << std::setprecision(5);
 
-            int index = 0;
-
             for (auto row = 0; row < m.rows_; row++)
             {
                 for (auto col = 0; col < m.cols_; col++)
                 {
-                    out << std::setw(12) << m.v_[index++];
+                    out << std::setw(12) << m[row][col];
                 }
 
                 out << std::endl;

@@ -39,8 +39,6 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
         auto &input = layerIo[layer];
         auto &output = layerIo[layer + 1];
 
-        //weights.multiply(output, input);
-
         output = (weights * input) + biases;
         cop::softmax(output.data(), output.rows());
     }
@@ -90,7 +88,7 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
     const int outputSize = w_.back().rows();
     int batchSize = batchSize_;
 
-    cop::ThreadPool<int> threadPool(std::thread::hardware_concurrency());
+    cop::ThreadPool<int> threadPool(workers_);
 
     for (int i = 0; i < numberBatches; ++i)
     {
@@ -131,6 +129,8 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
 
     log_ << std::endl
          << duration.count() << " ms" << std::endl;
+
+    //std::this_thread::sleep_for(10s);
 }
 
 void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpected)

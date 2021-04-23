@@ -38,6 +38,8 @@ int main()
     cop::NeuralNetwork network{imageData.getPixelsPerImage(), 256, 10};
 
     network.setBatchSize(128);
+    network.setWorkers(std::thread::hardware_concurrency());
+    network.setWorkers(6);
     network.fit(imageData.getImageData(), imageData.getNumberImages(), imageData.getLabelData());
 
     /*
