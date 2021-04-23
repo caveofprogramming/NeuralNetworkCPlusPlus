@@ -39,9 +39,9 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
         auto &input = layerIo[layer];
         auto &output = layerIo[layer + 1];
 
-        weights.multiply(output, input);
+        //weights.multiply(output, input);
 
-        output.addTo(biases);
+        output = (weights * input) + biases;
         cop::softmax(output.data(), output.rows());
     }
 }
@@ -78,7 +78,7 @@ int cop::NeuralNetwork::runBatch(float *pInput, int numberInputVectors, float *p
 
 void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *pExpected)
 {
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    steady_clock::time_point t1 = high_resolution_clock::now();
 
     const int inputVectorSize = w_[0].cols();
 
@@ -126,7 +126,7 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
 
     threadPool.awaitComplete();
 
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    steady_clock::time_point t2 = high_resolution_clock::now();
     duration<float, std::milli> duration = t2 - t1;
 
     log_ << std::endl
@@ -139,6 +139,8 @@ void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpe
     log_ << "Number of inputs: " << numberInputVectors << std::endl;
     log_ << std::endl;
 
+    steady_clock::time_point t1 = high_resolution_clock::now();
+
     logInterval_ = int(numberInputVectors / (80.0 * batchSize_)) + 1;
 
     for (int i = 0; i < epochs_; i++)
@@ -149,4 +151,10 @@ void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpe
 
         log_ << std::endl;
     }
+
+    steady_clock::time_point t2 = high_resolution_clock::now();
+
+    duration<float, std::milli> duration = t2 - t1;
+
+    std::cout << "\nCompleted in " << duration.count()/1000 << " seconds" << std::endl;
 }

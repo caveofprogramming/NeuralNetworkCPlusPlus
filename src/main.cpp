@@ -19,14 +19,16 @@ int main()
     cop::Matrix m1 = {
         {1, 2},
         {3, 4},
-        {5, 6}};
+    };
 
     cop::Matrix m2 = {
         {1, 2},
-        {3, 4},
+        {3, 5},
     };
 
-    std::cout << m1 * m2 << std::endl;
+    std::cout << m1 + m2 << std::endl;
+
+    //return 0;
 
     cop::ImageLoader imageData;
 

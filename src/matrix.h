@@ -6,6 +6,8 @@
 #include <functional>
 #include <sstream>
 #include <exception>
+#include <algorithm>
+#include <utility>
 
 namespace cop
 {
@@ -124,85 +126,80 @@ namespace cop
             other.cols_ = 0;
         }
 
+        float *operator[](int index) const
+        {
+            return v_ + (index * cols_);
+        }
+
         /*
          * Transpose
          */
-        void operator~()
+        Matrix operator~() const
         {
-            for(int row = 0; row < rows_; ++row)
+            Matrix transposed(cols_, rows_);
+
+            for (int row = 0; row < rows_; ++row)
             {
-                for(int col = 0; col < cols_; ++col)
+                for (int col = 0; col < cols_; ++col)
                 {
-                   
+                    transposed[col][row] = (*this)[row][col];
                 }
             }
+
+            return transposed;
+        }
+
+        Matrix operator+(const Matrix &addend) const
+        {
+            if (addend.rows_ != rows_ || addend.cols_ != cols_)
+            {
+                std::stringstream message;
+                message << "Cannot add matrixes." << std::endl;
+                message << "Addend 1 (" << rows_ << "," << cols_ << ")" << std::endl;
+                message << "Addend 2 (" << addend.rows_ << "," << addend.cols_ << ")" << std::endl;
+
+                throw std::runtime_error(message.str());
+            }
+            
+            Matrix result(rows_, cols_);
+
+            float *pThisData = v_;
+            float *pAddendData = addend.v_;
+            float *pResultData = result.v_;
+
+            for(int i = 0; i < rows_*cols_; i++)
+            {
+                *pResultData++ = *pThisData++ + *pAddendData++;
+            }
+
+            return result;
         }
 
         Matrix operator*(const Matrix &multiplier)
         {
             Matrix result(rows_, multiplier.cols_);
 
-            float *pThis = v_;
-            float *pMultiplier = multiplier.v_;
-            float *pResult = result.v_;
-            float sum = 0;
+            Matrix transposed = ~multiplier;
 
-            for(int row = 0; row < rows_; row++)
-            {
-                for(int col = 0; col < multiplier.cols_; col++)
-                {
-                    sum = 0;
-
-                    for(int n = 0; n < cols_; n++)
-                    {
-                        sum += pThis[row * cols_ + n] * pMultiplier[multiplier.cols_ * n + col];
-                    }
-
-                    pResult[multiplier.cols_ * row + col] = sum;
-                }
-            }
-
-            return result;
-        }
-
-        void multiply(const Matrix &result, const Matrix &multiplier)
-        {
-            if (result.rows_ != rows_ || result.cols_ != multiplier.cols_ || cols_ != multiplier.rows_)
-            {
-                std::stringstream message;
-                message << "Cannot multiply matrixes." << std::endl;
-                message << "Multiplicand: " << toString() << std::endl;
-                message << "Multiplier: " << multiplier.toString() << std::endl;
-                message << "Result: " << result.toString() << std::endl;
-
-                throw std::runtime_error(message.str());
-            }
-            
             float sum = 0.0;
 
-            float *pThisData = v_;
-            float *pResultData = result.v_;
-
-            for (int row = 0; row < rows_; ++row)
+            for (int row = 0; row < rows_; row++)
             {
-                for (int col = 0; col < multiplier.cols_; ++col)
+                for (int col = 0; col < multiplier.cols_; col++)
                 {
                     sum = 0.0;
 
                     for (int n = 0; n < cols_; n++)
                     {
-                        sum += pThisData[n] * multiplier.v_[n * multiplier.cols_ + col];
+                        sum += (*this)[row][n] * transposed[col][n];
                     }
 
-                    pResultData[col] = sum;
+                    result[row][col] = sum;
                 }
-
-                pThisData += cols_;
-                pResultData += multiplier.cols_;
             }
-        }
 
-        
+            return result;
+        }
 
         std::string toString() const
         {
