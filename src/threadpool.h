@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <functional>
@@ -7,6 +8,8 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+
+#include <iostream>
 
 namespace cop
 {
@@ -66,6 +69,7 @@ namespace cop
         T get()
         {
             std::unique_lock<std::mutex> lock(mtx_);
+
             cond_.wait(lock, [this]() { return !futures_.empty(); });
 
             std::shared_future<T> f = futures_.front();

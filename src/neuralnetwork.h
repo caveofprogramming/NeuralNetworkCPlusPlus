@@ -23,8 +23,8 @@ namespace cop
 
     protected:
         void runEpoch(float *pInput, int numberInputVectors, float *pExpected);
-        int runBatch(float *pInput, int numberInputVectors, float *pExpected);
-        void computeOutputs(std::vector<cop::Matrix> &layerIo);
+        int runBatch(int sequence, float *pInput, int numberInputVectors, float *pExpected);
+        void computeOutputs(std::vector<cop::Matrix> &layerIo, const Matrix &expected);
 
     public:
 
@@ -32,5 +32,6 @@ namespace cop
         void fit(float *pInput, int numberInputVectors, float *pExpected);
         void setBatchSize(int batchSize) { batchSize_ = batchSize; }
         void setWorkers(int workers) { workers_ = workers; };
+        float computeLoss(const Matrix &actual, const Matrix &expected);
     };
 }

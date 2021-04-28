@@ -2,6 +2,7 @@
 #include <time.h>
 #include <thread>
 #include <chrono>
+#include <cmath>
 #include "threadpool.h"
 #include "activations.h"
 #include "neuralnetwork.h"
@@ -30,7 +31,7 @@ cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
     }
 }
 
-void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
+void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
 {
     for (auto layer = 0; layer < int(w_.size()); layer++)
     {
@@ -42,15 +43,21 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
         output = (weights * input) + biases;
         cop::softmax(output.data(), output.rows());
     }
+
+    //double loss = computeLoss(layerIo.back(), expected);
+    //std::cout << loss << std::endl;
 }
 
-int cop::NeuralNetwork::runBatch(float *pInput, int numberInputVectors, float *pExpected)
+int cop::NeuralNetwork::runBatch(int sequence, float *pInput, int numberInputVectors, float *pExpected)
 {
     int inputRows = w_[0].cols();
+    int outputRows = w_.back().rows();
 
     float *pInputVector = pInput;
+    float *pExpectedVector = pExpected;
 
     std::vector<cop::Matrix> layerIo;
+    cop::Matrix expected(outputRows, 1);
 
     for (int i = 0; i < int(w_.size()); i++)
     {
@@ -62,16 +69,32 @@ int cop::NeuralNetwork::runBatch(float *pInput, int numberInputVectors, float *p
     for (int i = 0; i < numberInputVectors; i++)
     {
         layerIo[0].setData(pInput, inputRows * sizeof(float));
+        expected.setData(pExpectedVector, outputRows);
 
-        computeOutputs(layerIo);
+        computeOutputs(layerIo, expected);
 
         pInputVector += inputRows;
+        pExpectedVector += outputRows;
     }
 
-    // TODO unused warning disabled via useless code.
-    pExpected = nullptr;
+    if (sequence % logInterval_ == 0)
+    {
+        log_ << "." << std::flush;
+    }
 
     return 0;
+}
+
+float cop::NeuralNetwork::computeLoss(const Matrix &actual, const Matrix &expected)
+{
+    float sum = 0.0;
+
+    for (int i = 0; i < actual.rows(); i++)
+    {
+        sum -= expected[i][0] * std::log(actual[i][0]);
+    }
+
+    return sum;
 }
 
 void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *pExpected)
@@ -98,18 +121,13 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
         }
 
         auto work = [&]() {
-            return runBatch(pBatchInput, batchSize, pBatchExpected);
+            return runBatch(i, pBatchInput, batchSize, pBatchExpected);
         };
 
         threadPool.submit(work);
 
         pBatchInput += (inputVectorSize * batchSize_);
         pBatchExpected += outputSize * batchSize_;
-
-        if (i % logInterval_ == 0)
-        {
-            log_ << "." << std::flush;
-        }
     }
 
     threadPool.start();
@@ -129,8 +147,6 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
 
     log_ << std::endl
          << duration.count() << " ms" << std::endl;
-
-    //std::this_thread::sleep_for(10s);
 }
 
 void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpected)
@@ -156,5 +172,5 @@ void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpe
 
     duration<float, std::milli> duration = t2 - t1;
 
-    std::cout << "\nCompleted in " << duration.count()/1000 << " seconds" << std::endl;
+    std::cout << "\nCompleted in " << duration.count() / 1000 << " seconds" << std::endl;
 }

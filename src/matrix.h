@@ -89,12 +89,12 @@ namespace cop
             memcpy(e_.data(), pData, nBytes);
         }
 
-        int rows()
+        int rows() const
         {
             return rows_;
         }
 
-        int cols()
+        int cols() const
         {
             return cols_;
         }
