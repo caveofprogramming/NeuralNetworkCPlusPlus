@@ -27,9 +27,10 @@ int main()
 
     network.setBatchSize(128);
     network.setWorkers(std::thread::hardware_concurrency());
-    network.setWorkers(1);
+    network.setWorkers(6);
 
     network.fit(imageData.getImageData(), imageData.getNumberImages(), imageData.getLabelData());
+
 
     return 0;
 }
