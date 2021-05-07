@@ -61,7 +61,15 @@ int main()
 
     std::string directory = "/Users/john/Projects/NeuralNetworkCPlusPlus/MNIST/";
     imageData.load(directory + "train-images-idx3-ubyte", directory + "train-labels-idx1-ubyte");
-    //imageData.save(imageData.getNumberImages() - 1);
+
+    for (int i = 0; i < 10; i++)
+    {
+        int index = (imageData.getNumberImages() - 1) - i;
+        std::cout << "Writing " << index << std::endl;
+        imageData.save(index);
+    }
+
+    return 0;
 
     cop::NeuralNetwork network{imageData.getPixelsPerImage(), 256, 10};
 

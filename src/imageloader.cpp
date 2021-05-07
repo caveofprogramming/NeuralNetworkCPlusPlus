@@ -10,12 +10,13 @@
 #include "bitmapfileheader.h"
 #include "bitmapinfoheader.h"
 
-
 cop::ImageLoader::~ImageLoader()
 {
-
 }
 
+/*
+ * This translates the one-hot vector label back into a number from 0-9
+ */
 int cop::ImageLoader::getLabel(int index)
 {
     float *pData = labels_.data() + (index * 10);
@@ -92,13 +93,13 @@ void cop::ImageLoader::save(int index)
         file.write((char *)&color, 4);
     }
 
-    float *pBuffer = getImage(index);
+    int imageIndex = index * imageWidth_ * imageHeight_;
 
     for (int row = imageHeight_ - 1; row >= 0; --row)
     {
         for (uint32_t col = 0; col < imageWidth_; col++)
         {
-            uint8_t pixel = uint8_t(pBuffer[row * imageWidth_ + col] * 0xFF);
+            uint8_t pixel = uint8_t(images_[imageIndex + (row * imageWidth_) + col] * 0xFF);
             file.write((char *)&pixel, 1);
         }
     }
@@ -176,6 +177,9 @@ void cop::ImageLoader::load(std::string imageFileName, std::string labelFileName
         throw std::runtime_error(message.str());
     }
 
+    // We've checked the files contain the right magic numbers.
+    // Read the data.
+
     numberImages_ = readInt32(imageFile);
     uint32_t numberLabels = readInt32(labelFile);
 
@@ -191,29 +195,30 @@ void cop::ImageLoader::load(std::string imageFileName, std::string labelFileName
 
     int totalPixels = pixelsPerImage_ * numberImages_;
 
-    std::vector<uint8_t> byteImageLoader(totalPixels);
-    std::vector<uint8_t> byteLabelData(numberLabels);
+    // Each label will be in one-hot vector form.
+    // Eg. "3" is 0001000000
+    std::vector<uint8_t> byteImageData(totalPixels);
+    std::vector<uint8_t> byteLabelData(numberLabels * 10);
 
-    images_.resize(totalPixels);
-    labels_.resize(numberImages_ * 10);
-
-    imageFile.read(reinterpret_cast<char *>(byteImageLoader.data()), totalPixels);
+    imageFile.read(reinterpret_cast<char *>(byteImageData.data()), totalPixels);
     labelFile.read(reinterpret_cast<char *>(byteLabelData.data()), numberLabels);
 
     imageFile.close();
     labelFile.close();
 
+    // Got all the data. Insert image and label data into the vectors.
+
+    images_.resize(totalPixels);
+    labels_.resize(numberLabels * 10);
+
     for (int i = 0; i < totalPixels; ++i)
     {
-        images_[i] = float(byteImageLoader[i]) / 255.0;
+        images_[i] = float(byteImageData[i]) / 255.0;
     }
 
-    float *pLabel = labels_.data();
-
-    for (uint32_t i = 0; i < numberImages_; i++)
+    for (uint32_t i = 0; i < numberLabels; i++)
     {
-        uint8_t label = byteLabelData[i];
-        pLabel[label] = 1.0;
-        pLabel  += 10;
+        int label = byteLabelData[i];
+        labels_[(i * 10) + label] = 1;
     }
 }
