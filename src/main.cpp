@@ -4,6 +4,7 @@
 #include <thread>
 #include <sstream>
 #include <string>
+#include <functional>
 #include <cmath>
 
 #include "neuralnetwork.h"
@@ -14,6 +15,45 @@
 typedef std::vector<std::string> strings;
 
 using namespace std::chrono_literals;
+
+/*
+int main()
+{
+    const int items = 10000;
+    const int inputSize = 4;
+    const int outputSize = 3;
+
+    std::vector<float> input;
+    std::vector<float> expected;
+
+    for (int i = 0; i < items; i++)
+    {
+        double sum = 0.0;
+
+        for (int k = 0; k < inputSize; k++)
+        {
+            double value = float(rand()) / RAND_MAX;
+
+            input.push_back(value);
+
+            sum += value;
+        }
+
+        for (int k = 0; k < outputSize; k++)
+        {
+            expected.push_back(cos(k * sum));
+        }
+    }
+
+    cop::NeuralNetwork network{inputSize, 4, outputSize};
+
+    network.setBatchSize(8);
+    network.setWorkers(std::thread::hardware_concurrency());
+    network.setWorkers(6);
+
+    network.fit(input.data(), inputSize, expected.data());
+}
+*/
 
 int main()
 {
@@ -30,7 +70,6 @@ int main()
     network.setWorkers(6);
 
     network.fit(imageData.getImageData(), imageData.getNumberImages(), imageData.getLabelData());
-
 
     return 0;
 }

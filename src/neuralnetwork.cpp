@@ -80,7 +80,7 @@ void cop::NeuralNetwork::computeDeltas(std::vector<cop::Matrix> &layerIo, const 
 {
     double loss = computeLoss(layerIo.back(), expected);
 
-    std::cout << "Loss: " << loss << " ";
+    //std::cout << "Loss: " << loss << " ";
 
     if (loss < 0.1)
     {
