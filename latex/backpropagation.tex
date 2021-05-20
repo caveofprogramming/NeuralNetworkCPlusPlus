@@ -1,0 +1,128 @@
+\title{Backpropagation}
+\author{
+        John Purcell
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Back propagation adjusts the weights and biases of neural networks by repeatedly subtracting small quantities from the weights and biases that are proportional to the rates of change of the network loss with respect to those weights and biases.
+
+Here we demonstrate how to find these rates of change for multilayer neural networks. 
+\end{abstract}
+
+\section{Terms}
+
+\section{The Error: Definition and Use}
+
+We define a quantity $\delta^{L}$, referred to as the \textit{error} for layer \textbf{L}. This is the vector consising of the rates of change of the loss with respect to the weighted sums of the neurons in layer \textbf{L}.
+
+The \textit{i}th element of $\delta^{L}$ is then given by
+
+\begin{equation} \label{eq:1}
+\delta^{L}_{i}=\frac{\partial \lambda}{\partial z_{i}^{L}}
+\end{equation}
+
+where $z_{i}^{L}$ is the weighted sum of the \textit{i}th neuron in layer \textbf{L} and $\lambda$ is the network loss.
+
+We will first demonstrate that, given the error for a layer, it is easy to find the rates of change of the weights and biases for that layer.
+
+Consider the rate of change of the \textit{j}th weight of the \textit{i}th neuron in layer \textbf{L} with respect to the loss $\lambda$.
+
+Applying the \textit{chain rule} of calculus:
+
+\begin{equation} \label{eq:2}
+\frac{\partial \lambda}{\partial w^{L}_{ij}}=\frac{\partial \lambda}{\partial z^{L}_{i}}
+\frac{\partial z^{L}_{i}}{\partial w^{L}_{ij}}\end{equation}
+
+$\frac{\partial \lambda}{\partial z^{L}_{i}}$ is the layer error of the \textit{i}th neuron in layer \textbf{L}, by definition, i.e. $\delta^{L}_{i}$
+
+\smallskip
+
+$\frac{\partial z^{L}_{i}}{\partial w^{L}_{ij}}$ is the rate of change of the weighted sum of the \textit{i}th neuron with respect to the neuron's \textit{j}th weight. This is simply whatever multiplies the \textit{j}th weight, and that happens to be the activation (output) of the {j}th neuron in the previous layer, $a^{L-1}_{j}$
+
+Therefore:
+
+\begin{equation} \label{eq:3}
+\frac{\partial \lambda}{\partial w^{L}_{ij}}=\frac{\partial \lambda}{\partial z^{L}_{i}}
+\frac{\partial z^{L}_{i}}{\partial w^{L}_{ij}}
+=
+\delta^{L}_{i} a^{L-1}_{j}
+\end{equation}
+
+Given the error vector of a layer, it is therefore easy to calculate the rates of change of the network's loss with respect to each of the weights of the layer's neurons.
+
+In the case of the biases of each of the neurons, these behave like weights, if we regard them as being multiplied by an input from the previous layer of 1.
+
+It follows that:
+
+\begin{equation} \label{eq:4}
+\frac{\partial \lambda}{\partial b^{L}_{i}}=\frac{\partial \lambda}{\partial z^{L}_{i}}
+\frac{\partial z^{L}_{i}}{\partial b^{L}_{i}}
+=
+\delta^{L}_{i}. 1 =
+\delta^{L}_{i}
+\end{equation}
+
+where $b^{L}_i$ is the bias of the \textit{i}th neuron in layer \textbf{L}.
+
+The elements of the error vector directly give us the rates of change of the loss with respect to the layer biases.
+
+\section{Calculating the Previous Layer's Error}
+
+We will now determine how, given the error of the \textbf{L}th layer, we can find the error of the \textbf{L-1}th layer.
+
+Applying the chain rule again:
+
+\begin{equation} \label{eq:5}
+\delta^{L-1}_{i}=\frac{\partial \lambda}{\partial z^{L-1}_i} = \sum_{j} \frac{\partial \lambda}{\partial z^{L}_j} \frac{\partial z^{L}_j}{\partial z^{L-1}_i}
+=
+\sum_{j} \delta^{L}_{j}\frac{\partial z^{L}_j}{\partial z^{L-1}_i}
+\end{equation}
+
+
+Where $\sum_{i}$ indicates summation and \textit{i} ranges over all possible values for the neurons in layer \textbf{L}.
+
+Between the $z^{L-1}$ values and the $z^{L}$ values, an activation function $\sigma$ is applied and weighted sums are formed. We can therefore expand this equation further using the chain rule again.
+
+\begin{equation} \label{eq:6}
+\delta^{L-1}_i=
+\sum_{j} \delta^{L}_{j}\frac{\partial z^{L}_j}{\partial z^{L-1}_i}
+=
+\sum_{j} \delta^{L}_{j}\frac{\partial z^{L}_j}{\partial a^{L-1}_i}
+\frac{\partial a^{L-1}_i}{\partial z^{L-1}_i}
+=\sum_{j} \delta^{L}_{j}w^{L}_{ji}\sigma'(z^{L-1}_{i})
+\end{equation}
+
+Here, $\sigma'()$ is the derivative of the activation function used.
+
+This can be written in vector form as
+
+\begin{equation} \label{eq:7}
+\boxed{
+(\mathbf{W}^{L\top}\mathbf{\delta^{L}})\odot\mathbf{\sigma'(z^{L-1})}
+}
+\end{equation}
+
+Here we are taking the product of the transpose of the weight matrix for layer \textbf{L} with the vector (or one-column matrix) consisting of the errors for layer \textbf{L}; that is, the rates of change of the network loss with respect to the weighted sums of the neurons in the layer. We then take the Hadamard product (elementwise product) with the vector consisting of the activation function $\sigma$ applied to each of the weighted sums of the neurons in layer \textbf{L-1}.
+
+\section{Backpropagation}
+
+If we can now find the error for the output layer, we can use these equations to find the errors for each previous layer.
+
+If the output layer is labelled \textbf{L} and the error vector for this layer is $\mathbf{\delta^{L}}$, we can then find the errors for $\mathbf{\delta^{L-1}}$. We can use this, in turn, to find the error vector for $\mathbf{\delta^{L-2}}$, and so on for all layers.
+
+In order to do this we first need to find the error vector for the output layer. We need to know the output values of the network, the loss for these values, and we need to know how to differentiate the loss function with respect to each of the output values.
+
+To then find the error vectors for earlier layers, we will need to also know the outputs for those layers, and how to calculate the derivative of the activation function used.
+
+
+\bibliographystyle{abbrv}
+\bibliography{main}
+
+\end{document}

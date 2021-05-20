@@ -6,6 +6,7 @@
 #include "threadpool.h"
 #include "activations.h"
 #include "neuralnetwork.h"
+#include "logger.h"
 
 using namespace std::chrono;
 
@@ -13,7 +14,8 @@ cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
 {
     srand(time(NULL));
 
-    auto init = [](int, int) {
+    auto init = [](int, int)
+    {
         return (2.0 * rand()) / RAND_MAX - 1;
     };
 
@@ -76,19 +78,63 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
     }
 }
 
+void cop::NeuralNetwork::computeDeltasSlow(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
+{
+    std::vector<cop::Matrix> newLayerIo;
+
+    for (int i = 0; i < int(w_.size()); i++)
+    {
+        newLayerIo.push_back(cop::Matrix(w_[i].cols(), 1));
+    }
+
+    newLayerIo.push_back(cop::Matrix(w_.back().rows(), 1));
+
+    auto loss = computeLoss(layerIo.back(), expected);
+
+    const double inc = 0.00001;
+
+    std::vector<cop::Matrix> weightRates;
+
+    for (int layer = 0; layer < w_.size(); layer++)
+    {
+        auto &weights = w_[layer];
+        auto &biases = b_[layer];
+
+        auto weightRates = Matrix(weights.rows(), weights.cols());
+        auto biasRates = Matrix(biases.rows(), 1);
+
+        for (int row = 0; row < weights.rows(); row++)
+        {
+            for (int col = 0; col < weights.cols(); col++)
+            {
+                weights[row][col] += inc;
+
+                computeOutputs(newLayerIo);
+                auto newLoss = computeLoss(newLayerIo.back(), expected);
+
+                weightRates[row][col] = (newLoss - loss) / inc;
+
+                weights[row][col] -= inc;
+            }
+
+            biases[row][0] += inc;
+
+            computeOutputs(newLayerIo);
+            auto newLoss = computeLoss(newLayerIo.back(), expected);
+
+            biasRates[row][0] = (newLoss - loss) / inc;
+
+            biases[row][0] -= inc;
+        }
+
+        logger.log(layer, weights, biases);
+    }
+}
+
 void cop::NeuralNetwork::computeDeltas(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
 {
-    double loss = computeLoss(layerIo.back(), expected);
+    auto loss = computeLoss(layerIo.back(), expected);
 
-    //std::cout << "Loss: " << loss << " ";
-
-    if (loss < 0.1)
-    {
-        //std::cout << "\nExpected:\n"
-        // << expected << std::endl;
-        //std::cout << std::endl;
-        //std::cout << std::endl;
-    }
 }
 
 int cop::NeuralNetwork::runBatch(int sequence, float *pInput, int numberInputVectors, float *pExpected)
@@ -117,6 +163,7 @@ int cop::NeuralNetwork::runBatch(int sequence, float *pInput, int numberInputVec
         expected.setData(pExpectedVector, outputRows * sizeof(float));
 
         computeOutputs(layerIo);
+        computeDeltasSlow(layerIo, expected);
         computeDeltas(layerIo, expected);
 
         pInputVector += inputRows;
@@ -132,8 +179,9 @@ int cop::NeuralNetwork::runBatch(int sequence, float *pInput, int numberInputVec
     return 0;
 }
 
-float cop::NeuralNetwork::computeLoss(const Matrix &actual, const Matrix &expected)
+double cop::NeuralNetwork::computeLoss(const Matrix &actual, const Matrix &expected)
 {
+    // Categorical cross-entropy
     for (int i = 0; i < actual.rows(); i++)
     {
         if (expected[i][0] > 0)
@@ -142,7 +190,13 @@ float cop::NeuralNetwork::computeLoss(const Matrix &actual, const Matrix &expect
         }
     }
 
-    return 0;
+    return 0.0;
+}
+
+cop::Matrix computeOutputGradients(const Matrix &actual, const Matrix &expected)
+{
+    // Jacobian of output for categorical cross-entropy
+    
 }
 
 void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *pExpected)
@@ -169,7 +223,8 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
             batchSize = lastBatchSize;
         }
 
-        auto work = [this, i, pBatchInput, batchSize, pBatchExpected]() {
+        auto work = [this, i, pBatchInput, batchSize, pBatchExpected]()
+        {
             return runBatch(i, pBatchInput, batchSize, pBatchExpected);
         };
 

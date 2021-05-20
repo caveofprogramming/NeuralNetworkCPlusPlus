@@ -7,6 +7,8 @@
 #include <functional>
 #include <cmath>
 
+#include "logger.h"
+
 #include "neuralnetwork.h"
 #include "imageloader.h"
 #include "threadpool.h"
@@ -16,15 +18,14 @@ typedef std::vector<std::string> strings;
 
 using namespace std::chrono_literals;
 
-/*
 int main()
 {
     const int items = 10000;
-    const int inputSize = 4;
-    const int outputSize = 3;
+    const int inputSize = 2;
+    const int outputSize = 4;
 
     std::vector<float> input;
-    std::vector<float> expected;
+    std::vector<float> expected(items * 4);
 
     for (int i = 0; i < items; i++)
     {
@@ -39,37 +40,26 @@ int main()
             sum += value;
         }
 
-        for (int k = 0; k < outputSize; k++)
-        {
-            expected.push_back(cos(k * sum));
-        }
+        int category = int(sum * 2);
+        expected[(i * 4) + category] = 1;
     }
 
     cop::NeuralNetwork network{inputSize, 4, outputSize};
 
     network.setBatchSize(8);
     network.setWorkers(std::thread::hardware_concurrency());
-    network.setWorkers(6);
+    network.setWorkers(1);
 
-    network.fit(input.data(), inputSize, expected.data());
+    network.fit(input.data(), items, expected.data());
 }
-*/
 
+/*
 int main()
 {
     cop::ImageLoader imageData;
 
     std::string directory = "/Users/john/Projects/NeuralNetworkCPlusPlus/MNIST/";
     imageData.load(directory + "train-images-idx3-ubyte", directory + "train-labels-idx1-ubyte");
-
-    for (int i = 0; i < 10; i++)
-    {
-        int index = (imageData.getNumberImages() - 1) - i;
-        std::cout << "Writing " << index << std::endl;
-        imageData.save(index);
-    }
-
-    return 0;
 
     cop::NeuralNetwork network{imageData.getPixelsPerImage(), 256, 10};
 
@@ -81,3 +71,5 @@ int main()
 
     return 0;
 }
+
+*/

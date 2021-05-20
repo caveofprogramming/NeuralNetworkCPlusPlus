@@ -29,6 +29,7 @@ namespace cop
         int runBatch(int sequence, float *pInput, int numberInputVectors, float *pExpected);
         void computeOutputs(std::vector<cop::Matrix> &layerIo);
         void computeDeltas(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
+        void computeDeltasSlow(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
 
     public:
 
@@ -36,7 +37,7 @@ namespace cop
         void fit(float *pInput, int numberInputVectors, float *pExpected);
         void setBatchSize(int batchSize) { batchSize_ = batchSize; }
         void setWorkers(int workers) { workers_ = workers; };
-        float computeLoss(const Matrix &actual, const Matrix &expected);
+        double computeLoss(const Matrix &actual, const Matrix &expected);
 
         friend std::ostream &operator<<(std::ostream &out, const cop::NeuralNetwork &network);
     };

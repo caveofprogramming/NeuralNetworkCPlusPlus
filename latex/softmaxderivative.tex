@@ -1,0 +1,177 @@
+\title{Derivative of the Softmax Function}
+\author{
+        John Purcell
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{Terms}
+
+\begin{itemize}
+\item[] $a_i$ the activation (output) of the \textit{i}th neuron of a layer of neurons
+\item[] $z_i$ the weight of the \textit{i}th neuron in the layer 
+\item[] $ln()$ the natural logarithm function, $log_e()$  
+\end{itemize}
+
+We will also use the symbol $\sigma$ to indicate the softmax function.
+
+\section{Softmax}
+
+We apply the softmax function to the weighted sum of a neuron to find its activation (output). It's defined like this:
+
+\begin{equation} \label{eq:softmax}
+a_i = \sigma(z_i) = \frac{e^{z_i}}{ \sum_{j} e^{z_j} }
+\end{equation}
+
+Here, \textit{j} ranges over all possible values for the layer, iterating over all neurons in the layer.
+
+We take the exponential function of the weighted sum of a neuron and then divide by the sum of the exponentials of all the weighted sums in the layer, so that the outputs of all the neurons in the layer sum to 1.
+
+\section{The Chain Rule and Logs of Functions}
+
+The \textit{chain rule} enables us to differentiate functions of functions. We will use it here to differentiate $ln(f(x))$, where $f()$ is any differentiable function.
+\bigskip
+
+Let
+$$
+y=ln(f(x))
+$$
+
+and
+
+$$
+u=f(x)
+$$
+
+so that
+
+$$
+y=ln(u)
+$$
+
+then
+
+$$
+\frac{dy}{dx}=\frac{dy}{du}\frac{du}{dx}=\frac{1}{u}\frac{d}{d x}f(x)=\frac{1}{f(x)}\frac{d}{dx}f(x)
+$$
+
+Therefore
+
+\begin{equation} \label{eq:2}
+        \boxed{
+                \frac{d}{dx}ln(f(x))=
+                \frac{1}{f(x)}\frac{d}{dx}f(x)
+        }
+\end{equation}
+\bigskip
+
+This is known as the \textit{logarithmic derivative} of the function $f$.
+
+\section{Derivative of Softmmax}
+
+
+\bigskip
+We will now use (\ref{eq:2}) to find the derivative of the softmax function. We can simplify by first taking the log of the activation and introducing a variable \textit{s}.
+
+\begin{equation} \label{eq:s}
+s=ln(a_i)
+\end{equation}
+
+$$
+\frac{\partial s}{\partial z_j}=
+=\frac{1}{a_i}\frac{\partial a_i}{\partial z_j}
+$$
+
+Rearranging gives:
+
+\begin{equation} \label{eq:3}
+a_i\frac{\partial s}{\partial z_j}
+=\frac{\partial a_i}{\partial z_j}
+\end{equation}
+
+The term on the right is what we are looking for; the derivative of the softmax function with respect to an arbitrary weighted sum in the same layer, $z_j$. We simply need to find $\frac{\partial s}{\partial z_j}$.
+
+First we will actually take the log of the softmax function, keeping in mind equations (\ref{eq:softmax}) and (\ref{eq:s}).
+
+$$
+        ln\left( \frac{e^{z_i}}{\sum_n e^{z_n}} \right)
+        =ln(e^{z_i}) - ln(\sum_n e^{z_n})
+        =z_i - ln(\sum_n e^{z_n})
+$$
+
+\bigskip
+
+Here we have used the following property of logarithms.
+
+$$
+        log\left(\frac{x}{y}\right) = log(x) - log(y)
+$$
+\bigskip
+
+Now we can differentiate this expression.
+
+$$
+\frac{\partial s}{\partial z_j}=
+\frac{\partial z_i}{\partial z_j} - \frac{\partial}{\partial z_j} ln(\sum_n e^{z_n})       
+$$
+\bigskip
+
+The term $\frac{\partial z_i}{\partial z_j}$ evaluates to 1 if $i = j$, otherwise it's zero.
+\bigskip
+
+Here we can introduce the \textit{Kronecker delta}, $\delta_{ij}$.
+The Kronecker delta is defined like this:
+
+$$
+        \delta_{ij} = 
+        \begin{cases}
+        1 &\mbox{if } i = j \\
+        0 & \mbox{if } i \neq j
+        \end{cases}
+$$
+
+So
+
+$$
+\frac{\partial s}{\partial z_j}
+=\delta_{ij} - \frac{\partial}{\partial z_j}ln(  \sum_n e^{z_n})
+=\delta_{ij} - \frac{1}{\sum_n e^{z_n}} \frac{\partial}{\partial z_j}(\sum_n e^{z_n})
+$$
+\bigskip
+
+The derivative of the sum in the above equation expands to a series of terms, all of which are zero except for the one containing $e^{z_j}$, and
+
+$$
+        \frac{\partial}{\partial z_j}(e^{z_j})=e^{z_j}
+$$ 
+
+So
+
+$$
+        \frac{\partial s}{\partial z_j}=
+        \delta_{ij} - \frac{e^{z_j}}{\sum_n e^{z_n}}
+        =\delta_{ij} - \sigma(z_j)
+$$
+
+\bigskip
+
+Plugging this into (\ref{eq:3})
+
+\begin{equation} \label{eq:13}
+        \frac{\partial}{\partial z_j}\sigma(z_j)=\sigma(z_i)(\delta_{ij} - \sigma(z_j))
+\end{equation}
+
+
+\bibliographystyle{abbrv}
+\bibliography{main}
+
+\end{document}
