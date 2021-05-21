@@ -1,0 +1,109 @@
+\title{Derivative of the Categorical Cross-Entropy Function}
+\author{
+        John Purcell
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+We will also use the symbol $\sigma$ to indicate the softmax function.
+
+\section{Categorical Cross-Entropy}
+
+The categorical cross-entropy loss function is defined like this:
+
+\begin{equation} \label{eq:cce}
+    \lambda = -\sum_i \hat{a_i} ln(a_i)
+\end{equation}
+
+    where
+
+    \begin{itemize}
+        \item[] $\hat{a_i}$ is the expected (desired) value for the output of neuron \textit{i} in the final layer, for some particular input to the network
+        \item[] $a_i$ is the actual output of the \textit{i}th neuron in the final layer for the same input
+        \item[] $\lambda$ ("lambda") is the network loss, which we seek to minimise.  
+    \end{itemize}
+
+    We need to find the rate of change of $\lambda$ with respect to each of the weighted sums $z_i$ of the neurons in the final layer.
+
+\begin{equation} \label{eq:ccederiv1}
+    \frac{\partial \lambda}{\partial z_j}=
+    \frac{\partial}{\partial z_j}\left( -\sum_i \hat{a_i} ln(a_i)\right)
+    =-\sum_i \hat{a_i} \frac{\partial}{\partial z_j}ln(a_i)
+    =-\sum_i \frac{\hat{a_i}}{a_i} \frac{\partial a_i}{\partial z_j}
+\end{equation}
+
+We have already calculated $\frac{\partial a_i}{\partial z_j}$. Since we are using the softmax function in our network, it is the derivative of softmax with respect to the $z_j$.
+
+$$
+\frac{\partial a_i}{\partial z_j}=\sigma(z_i)(\delta_{ij} - \sigma(z_j))
+$$
+
+where $\sigma$ is the softmax function.
+\bigskip
+
+Putting this into (\ref{eq:ccederiv1}):
+
+$$
+\frac{\partial \lambda}{\partial z_j}=
+-\sum_i \frac{\hat{a_i}}{a_i}\sigma(z_i)(\delta_{ij} - \sigma(z_j))
+=-\sum_i \hat{a_i}(\delta_{ij} - \sigma(z_j))
+$$
+
+We can write this as a sum of two cases: the case where $i=j$ and $\delta_{ij}=0$ the case where $i \neq j$ and $\delta_{ij}=1$.
+
+$$
+\frac{\partial \lambda}{\partial z_j}=
+-\left(\sum_{i=j} \hat{a_i}(\delta_{ij} - \sigma(z_j)) + \sum_{i \neq j} \hat{a_i}(\delta_{ij} - \sigma(z_j))\right)
+$$
+
+Simplifying:
+
+$$
+\frac{\partial \lambda}{\partial z_j}=
+(\hat{a_j}(1 - \sigma(z_j))) - \sum_{i \neq j} \hat{a_i} \sigma(z_j)
+=(\hat{a_j} - \hat{a_j}\sigma(z_j)) - \sum_{i \neq j} \hat{a_i} \sigma(z_j)
+$$
+
+Now we can easily put the term $\hat{a_j}\sigma(z_j)$ back inside the summation.
+
+$$
+\frac{\partial \lambda}{\partial z_j}=
+\hat{a_j} - \sum_{i} \hat{a_i} \sigma(z_j)
+$$
+
+The expression $\sigma(z_j)$ can be taken out of the summation, since it's the same for every term of the summation.
+
+$$
+\frac{\partial \lambda}{\partial z_j}=
+\hat{a_j} - \sigma(z_j)\sum_{i} \hat{a_i}
+$$
+
+Finally, we use the fact that the $\hat{a_i}$ sum to 1, because they are a probability distribution. In fact, for our particular purposes, since we're using one-hot vectors in this course, they're all zero apart from one of them, which will be equal to 1.
+
+$$
+\frac{\partial \lambda}{\partial z_j}=
+\hat{a_j} - \sigma(z_j)
+$$
+
+We can write this in vector form:
+
+$$
+\frac{\partial \lambda}{\partial \mathbf{z}}=
+\mathbf{\hat{a}} - \mathbf{a}
+$$
+
+Where $\mathbf{\hat{a}}$ is the expected vector of outputs of the neural network, $\mathbf{a}$ is the actual vector of outputs, and $\mathbf{z}$ are the weighted sums of the neurons in the output layer.
+
+\bibliographystyle{abbrv}
+\bibliography{main}
+
+\end{document}
