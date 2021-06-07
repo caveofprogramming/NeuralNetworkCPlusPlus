@@ -25,7 +25,8 @@ namespace cop
             out << text << " " << value << std::endl;
         }
 
-        void log(int layer, cop::Matrix &weights, cop::Matrix &biases);
+        void log(std::string label, std::vector<cop::Matrix> &weights, std::vector<cop::Matrix> &biases);
+        void log(std::string label, int layer, cop::Matrix &weights, cop::Matrix &biases);
     };
 
     static Logger logger;

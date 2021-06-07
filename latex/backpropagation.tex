@@ -10,13 +10,10 @@
 \begin{document}
 \maketitle
 
-\begin{abstract}
+\section{Introduction}
 Back propagation adjusts the weights and biases of neural networks by repeatedly subtracting small quantities from the weights and biases that are proportional to the rates of change of the network loss with respect to those weights and biases.
 
 Here we demonstrate how to find these rates of change for multilayer neural networks. 
-\end{abstract}
-
-\section{Terms}
 
 \section{The Error: Definition and Use}
 
@@ -105,7 +102,7 @@ This can be written in vector form as
 
 \begin{equation} \label{eq:7}
 \boxed{
-(\mathbf{W}^{L\top}\mathbf{\delta^{L}})\odot\mathbf{\sigma'(z^{L-1})}
+        \mathbf{\delta^{L-1}} = (\mathbf{W}^{L\top}\mathbf{\delta^{L}})\odot\mathbf{\sigma'(z^{L-1})}
 }
 \end{equation}
 

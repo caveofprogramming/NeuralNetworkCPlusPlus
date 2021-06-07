@@ -2,10 +2,22 @@
 
 cop::Logger logger;
 
-void cop::Logger::log(int layer, cop::Matrix &weights, cop::Matrix &biases)
+void cop::Logger::log(std::string label, std::vector<cop::Matrix> &weights, std::vector<cop::Matrix> &biases)
+{
+    for(int i = 0; i < weights.size(); i++)
+    {
+        auto &w = weights[i];
+        auto &b = biases[i];
+
+        log(label, i, w, b);
+    }
+}
+
+void cop::Logger::log(std::string label, int layer, cop::Matrix &weights, cop::Matrix &biases)
 {
     std::unique_lock<std::mutex> lock(mtx_);
 
+    out << label << "\n";
     out << "Layer " << layer << "\n";
 
     out << std::showpos << std::fixed << std::setprecision(5);

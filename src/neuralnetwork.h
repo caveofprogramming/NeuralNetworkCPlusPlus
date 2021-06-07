@@ -14,7 +14,7 @@ namespace cop
         std::vector<Matrix> w_;
         std::vector<Matrix> b_;
 
-        //float learningRate_ = 0.01;
+        //double learningRate_ = 0.01;
         int batchSize_ = 1;
         int epochs_ = 20;
         int logInterval_ = 1;
@@ -25,20 +25,21 @@ namespace cop
         std::ostream &log_  = std::cout;
 
     protected:
-        void runEpoch(float *pInput, int numberInputVectors, float *pExpected);
-        int runBatch(int sequence, float *pInput, int numberInputVectors, float *pExpected);
+        void runEpoch(double *pInput, int numberInputVectors, double *pExpected);
+        int runBatch(int sequence, double *pInput, int numberInputVectors, double *pExpected);
         void computeOutputs(std::vector<cop::Matrix> &layerIo);
-        void computeDeltas(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
-        void computeDeltasSlow(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
+        void computeDeltas(std::vector<cop::Matrix> &deltas, std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
+        void showGradients(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
 
     public:
 
         NeuralNetwork(std::initializer_list<int> layerSizes);
-        void fit(float *pInput, int numberInputVectors, float *pExpected);
+        void fit(double *pInput, int numberInputVectors, double *pExpected);
         void setBatchSize(int batchSize) { batchSize_ = batchSize; }
         void setWorkers(int workers) { workers_ = workers; };
+        void setEpochs(int epochs) { epochs_ = epochs; }
         double computeLoss(const Matrix &actual, const Matrix &expected);
 
-        friend std::ostream &operator<<(std::ostream &out, const cop::NeuralNetwork &network);
+        void writeLog();
     };
 }

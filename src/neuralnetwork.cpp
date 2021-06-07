@@ -12,7 +12,7 @@ using namespace std::chrono;
 
 cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
 {
-    srand(time(NULL));
+    //srand(time(NULL));
 
     auto init = [](int, int)
     {
@@ -33,35 +33,9 @@ cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
     }
 }
 
-std::ostream &cop::operator<<(std::ostream &out, const cop::NeuralNetwork &network)
+void cop::NeuralNetwork::writeLog()
 {
-    for (int i = 0; i < int(network.w_.size()); i++)
-    {
-        out << "LAYER " << i << ":" << std::endl;
-
-        const cop::Matrix &weights = network.w_[i];
-        const cop::Matrix &biases = network.b_[i];
-
-        out << std::showpos << std::fixed << std::setprecision(5);
-
-        for (int row = 0; row < weights.rows(); row++)
-        {
-            for (int col = 0; col < weights.cols(); col++)
-            {
-                out << std::setw(12) << weights[row][col];
-
-                if (col > 6)
-                {
-                    out << " ... ";
-                    break;
-                }
-            }
-
-            out << "| " << biases[row][0] << std::endl;
-        }
-    }
-
-    return out;
+    logger.log("Network", w_, b_);
 }
 
 void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
@@ -74,26 +48,32 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
         auto &output = layerIo[layer + 1];
 
         output = (weights * input) + biases;
+
         cop::softmax(output.data(), output.rows());
     }
 }
 
-void cop::NeuralNetwork::computeDeltasSlow(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
+void cop::NeuralNetwork::showGradients(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
 {
-    std::vector<cop::Matrix> newLayerIo;
-
-    for (int i = 0; i < int(w_.size()); i++)
-    {
-        newLayerIo.push_back(cop::Matrix(w_[i].cols(), 1));
-    }
-
-    newLayerIo.push_back(cop::Matrix(w_.back().rows(), 1));
-
+    computeOutputs(layerIo);
     auto loss = computeLoss(layerIo.back(), expected);
 
-    const double inc = 0.00001;
+    std::cout.precision(10);
+    std::cout << "\nLOSS1  " << loss << std::endl;
+    const double inc = 0.0000001;
 
-    std::vector<cop::Matrix> weightRates;
+/*
+    b_[0][0][0] += inc;
+
+    computeOutputs(layerIo);
+    auto loss2 = computeLoss(layerIo.back(), expected);
+
+    std::cout << "\nLOSS2  " << loss2 << std::endl;
+
+    std::cout << "\nRATE: " << (loss2 - loss)/inc << std::endl;
+
+    b_[0][0][0] -= inc;
+*/
 
     for (int layer = 0; layer < w_.size(); layer++)
     {
@@ -107,43 +87,75 @@ void cop::NeuralNetwork::computeDeltasSlow(std::vector<cop::Matrix> &layerIo, co
         {
             for (int col = 0; col < weights.cols(); col++)
             {
-                weights[row][col] += inc;
+                double weightValue = weights[row][col];
 
-                computeOutputs(newLayerIo);
-                auto newLoss = computeLoss(newLayerIo.back(), expected);
+                weights[row][col] = weightValue + inc;
+
+                computeOutputs(layerIo);
+                auto newLoss = computeLoss(layerIo.back(), expected);
 
                 weightRates[row][col] = (newLoss - loss) / inc;
 
-                weights[row][col] -= inc;
+                weights[row][col] = weightValue;
             }
 
-            biases[row][0] += inc;
+            double biasValue = biases[row][0];
 
-            computeOutputs(newLayerIo);
-            auto newLoss = computeLoss(newLayerIo.back(), expected);
+            biases[row][0] = biasValue + inc;
+
+            computeOutputs(layerIo);
+            auto newLoss = computeLoss(layerIo.back(), expected);
 
             biasRates[row][0] = (newLoss - loss) / inc;
 
-            biases[row][0] -= inc;
+            biases[row][0] = biasValue;
         }
 
-        logger.log(layer, weights, biases);
+        logger.log("Computed gradients", layer, weightRates, biasRates);
     }
+
+    // Recompute original layerIo
+    computeOutputs(layerIo);
+    auto loss2 = computeLoss(layerIo.back(), expected);
+
+    std::cout << "Should be zero: " << (loss2 - loss) << std::endl;
+
 }
 
-void cop::NeuralNetwork::computeDeltas(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
+void cop::NeuralNetwork::computeDeltas(std::vector<cop::Matrix> &deltas, std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
 {
     auto loss = computeLoss(layerIo.back(), expected);
 
+    auto errors = layerIo.back() - expected;
+
+    std::cout << "\nOutput:\n"
+              << layerIo.back() << std::endl;
+
+    double sum = 0;
+
+    auto &output = layerIo.back();
+
+    for (int i = 0; i < output.rows(); i++)
+    {
+
+        sum += output[i][0];
+    }
+
+    std::cout << "sum: " << sum << std::endl;
+
+    std::cout << "Errors: \n"
+              << errors << std::endl;
+    
+    deltas[0] = std::move(errors);
 }
 
-int cop::NeuralNetwork::runBatch(int sequence, float *pInput, int numberInputVectors, float *pExpected)
+int cop::NeuralNetwork::runBatch(int sequence, double *pInput, int numberInputVectors, double *pExpected)
 {
     int inputRows = w_[0].cols();
     int outputRows = w_.back().rows();
 
-    float *pInputVector = pInput;
-    float *pExpectedVector = pExpected;
+    double *pInputVector = pInput;
+    double *pExpectedVector = pExpected;
 
     std::vector<cop::Matrix> layerIo;
     cop::Matrix expected(outputRows, 1);
@@ -155,22 +167,35 @@ int cop::NeuralNetwork::runBatch(int sequence, float *pInput, int numberInputVec
 
     layerIo.push_back(cop::Matrix(w_.back().rows(), 1));
 
+    // We will use this to sum up all the layer errors
+    // from this batch, before applying them.
+    std::vector<cop::Matrix> deltas;
+
+    for (int i = 0; i < w_.size(); i++)
+    {
+        deltas.push_back(cop::Matrix(w_[i].rows(), 1));
+    }
+
     for (int i = 0; i < numberInputVectors; i++)
     {
         std::unique_lock<std::mutex> mtxLog_;
 
-        layerIo[0].setData(pInput, inputRows * sizeof(float));
-        expected.setData(pExpectedVector, outputRows * sizeof(float));
+        layerIo[0].setData(pInput, inputRows * sizeof(double));
+        expected.setData(pExpectedVector, outputRows * sizeof(double));
 
         computeOutputs(layerIo);
-        computeDeltasSlow(layerIo, expected);
-        computeDeltas(layerIo, expected);
+        showGradients(layerIo, expected);
+        computeDeltas(deltas, layerIo, expected);
+
+        std::cout << "\nDeltas:\n" << deltas[0] << std::endl;
+        std::cout << "\nLayer input:\n" << layerIo[0] << std::endl;
+        std::cout << "\nCalculated gradients:\n" << deltas[0] * ~layerIo[0] << std::endl;
 
         pInputVector += inputRows;
         pExpectedVector += outputRows;
     }
 
-    if (sequence % logInterval_ == 0)
+    if (logInterval_ != 0 && sequence % logInterval_ == 0)
     {
         std::unique_lock<std::mutex> lock(mtxLog_);
         log_ << "." << std::flush;
@@ -184,7 +209,7 @@ double cop::NeuralNetwork::computeLoss(const Matrix &actual, const Matrix &expec
     // Categorical cross-entropy
     for (int i = 0; i < actual.rows(); i++)
     {
-        if (expected[i][0] > 0)
+        if (expected[i][0] > 0.1)
         {
             return -std::log(actual[i][0]);
         }
@@ -193,13 +218,7 @@ double cop::NeuralNetwork::computeLoss(const Matrix &actual, const Matrix &expec
     return 0.0;
 }
 
-cop::Matrix computeOutputGradients(const Matrix &actual, const Matrix &expected)
-{
-    // Jacobian of output for categorical cross-entropy
-    
-}
-
-void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *pExpected)
+void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double *pExpected)
 {
 
     steady_clock::time_point t1 = high_resolution_clock::now();
@@ -209,8 +228,8 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
     const int numberBatches = numberInputVectors / batchSize_;
     const int lastBatchSize = numberInputVectors % batchSize_;
 
-    float *pBatchInput = pInput;
-    float *pBatchExpected = pExpected;
+    double *pBatchInput = pInput;
+    double *pBatchExpected = pExpected;
     const int outputSize = w_.back().rows();
     int batchSize = batchSize_;
 
@@ -247,17 +266,18 @@ void cop::NeuralNetwork::runEpoch(float *pInput, int numberInputVectors, float *
     threadPool.awaitComplete();
 
     steady_clock::time_point t2 = high_resolution_clock::now();
-    duration<float, std::milli> duration = t2 - t1;
+    duration<double, std::milli> duration = t2 - t1;
 
     log_ << " " << duration.count() << " ms" << std::endl;
 }
 
-void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpected)
+void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pExpected)
 {
 
     log_ << "Batch size: " << batchSize_ << std::endl;
     log_ << "Number of inputs: " << numberInputVectors << std::endl;
     log_ << "Worker threads: " << workers_ << std::endl;
+    log_ << "Epochs: " << epochs_ << std::endl;
     log_ << std::endl;
 
     steady_clock::time_point t1 = high_resolution_clock::now();
@@ -273,7 +293,9 @@ void cop::NeuralNetwork::fit(float *pInput, int numberInputVectors, float *pExpe
 
     steady_clock::time_point t2 = high_resolution_clock::now();
 
-    duration<float, std::milli> duration = t2 - t1;
+    duration<double, std::milli> duration = t2 - t1;
 
     std::cout << "\nCompleted in " << duration.count() / 1000 << " seconds" << std::endl;
 }
+
+// TODO change log_ to logger.log

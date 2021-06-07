@@ -15,7 +15,7 @@ namespace cop
     class Matrix
     {
     private:
-        std::vector<float> e_;
+        std::vector<double> e_;
 
         int rows_ = 0;
         int cols_ = 0;
@@ -38,7 +38,7 @@ namespace cop
             other.cols_ = 0;
         }
 
-        Matrix(int rows, int cols, std::function<float(int, int)> init) : rows_(rows), cols_(cols)
+        Matrix(int rows, int cols, std::function<double(int, int)> init) : rows_(rows), cols_(cols)
         {
             e_.resize(rows_ * cols_);
 
@@ -51,18 +51,30 @@ namespace cop
             }
         }
 
+        Matrix operator-(const Matrix &other)
+        {
+            Matrix result(rows_, cols_);
+
+            for(int i = 0; i < rows_ * cols_; i++)
+            {
+                result.e_[i] = e_[i] - other.e_[i];
+            }
+
+            return result;
+        }
+
         Matrix(int rows, int cols) : rows_(rows), cols_(cols)
         {
             e_.resize(rows * cols);
         }
 
-        Matrix(int rows, float *pData) : rows_(rows), cols_(1)
+        Matrix(int rows, double *pData) : rows_(rows), cols_(1)
         {
             e_.resize(rows);
             memcpy(e_.data(), pData, rows);
         }
 
-        Matrix(std::initializer_list<std::initializer_list<float>> init)
+        Matrix(std::initializer_list<std::initializer_list<double>> init)
         {
             rows_ = init.size();
             cols_ = init.begin()->size();
@@ -78,13 +90,21 @@ namespace cop
                     e_.data()[index++] = value;
                 }
             }
+
+            // Initialise column vectors by default,
+            // not row vectors.
+            if(rows_ == 1)
+            {
+                rows_ = cols_;
+                cols_ = 1;
+            }
         }
 
         ~Matrix()
         {
         }
 
-        void setData(float *pData, int nBytes)
+        void setData(double *pData, int nBytes)
         {
             memcpy(e_.data(), pData, nBytes);
         }
@@ -99,17 +119,17 @@ namespace cop
             return cols_;
         }
 
-        float *data()
+        double *data()
         {
             return e_.data();
         }
 
-        const float *operator[](int index) const
+        const double *operator[](int index) const
         {
             return e_.data() + (index * cols_);
         }
 
-        float *operator[](int index)
+        double *operator[](int index)
         {
             return e_.data() + (index * cols_);
         }
@@ -146,9 +166,9 @@ namespace cop
 
             Matrix result(rows_, cols_);
 
-            const float *pThisData = e_.data();
-            const float *pAddendData = addend.e_.data();
-            float *pResultData = result.e_.data();
+            const double *pThisData = e_.data();
+            const double *pAddendData = addend.e_.data();
+            double *pResultData = result.e_.data();
 
             for (int i = 0; i < rows_ * cols_; i++)
             {
@@ -164,7 +184,7 @@ namespace cop
 
             Matrix transposed = ~multiplier;
 
-            float sum = 0.0;
+            double sum = 0.0;
 
             for (int row = 0; row < rows_; row++)
             {

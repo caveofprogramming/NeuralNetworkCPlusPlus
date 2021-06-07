@@ -19,7 +19,7 @@ cop::ImageLoader::~ImageLoader()
  */
 int cop::ImageLoader::getLabel(int index)
 {
-    float *pData = labels_.data() + (index * 10);
+    double *pData = labels_.data() + (index * 10);
 
     int result = 0;
 
@@ -27,7 +27,7 @@ int cop::ImageLoader::getLabel(int index)
     {
         result <<= 1;
 
-        float value = *pData++;
+        double value = *pData++;
 
         if (value > 0.1)
         {
@@ -39,12 +39,12 @@ int cop::ImageLoader::getLabel(int index)
     return result;
 }
 
-float *cop::ImageLoader::getImageData()
+double *cop::ImageLoader::getImageData()
 {
     return images_.data();
 }
 
-float *cop::ImageLoader::getLabelData()
+double *cop::ImageLoader::getLabelData()
 {
     return labels_.data();
 }
@@ -135,7 +135,7 @@ int cop::ImageLoader::getHeight()
     return imageHeight_;
 }
 
-float *cop::ImageLoader::getImage(int index)
+double *cop::ImageLoader::getImage(int index)
 {
     return images_.data() + pixelsPerImage_ * index;
 }
@@ -213,7 +213,7 @@ void cop::ImageLoader::load(std::string imageFileName, std::string labelFileName
 
     for (int i = 0; i < totalPixels; ++i)
     {
-        images_[i] = float(byteImageData[i]) / 255.0;
+        images_[i] = double(byteImageData[i]) / 255.0;
     }
 
     for (uint32_t i = 0; i < numberLabels; i++)

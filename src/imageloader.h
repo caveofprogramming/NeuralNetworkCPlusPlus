@@ -13,8 +13,8 @@ namespace cop
         uint32_t imageSize = 0;
         uint32_t pixelsPerImage_ = 0;
 
-        std::vector<float> images_;
-        std::vector<float> labels_;
+        std::vector<double> images_;
+        std::vector<double> labels_;
 
     protected:
         static uint32_t readInt32(std::ifstream &file);
@@ -28,9 +28,9 @@ namespace cop
         int getWidth();
         int getHeight();
         int getPixelsPerImage();
-        float *getImageData();
-        float *getLabelData();
-        float *getImage(int index);
+        double *getImageData();
+        double *getLabelData();
+        double *getImage(int index);
         int getLabel(int index);
 
         ~ImageLoader();
