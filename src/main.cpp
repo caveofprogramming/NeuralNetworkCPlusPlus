@@ -137,66 +137,23 @@ int main()
 
 int main()
 {
-    cop::Matrix m1{{1, 2}, {3, 4}};
-    cop::Matrix m2{{1, 2}};
+ 
+    srand(time(nullptr));
 
-    std::cout << m1 << std::endl;
-    std::cout << m2 << std::endl;
-    std::cout << m1 * m2 << std::endl;
+    std::vector<double> input{0.25, 0.53};
+    std::vector<double> expected{0, 1};
 
-    //return 0;
-    //srand(time(nullptr));
-
-    const int items = 1;
-    const int inputSize = 2;
-    const int outputSize = 2;
-
-    std::vector<double> input;
-    std::vector<double> expected(outputSize);
-
-    for (int i = 0; i < items; i++)
-    {
-        double sum = 0.0;
-
-        for (int k = 0; k < inputSize; k++)
-        {
-            rand();
-            double value = double(rand()) / RAND_MAX;
-
-            input.push_back(value);
-
-            sum += value;
-        }
-
-        int category = outputSize * double(rand())/RAND_MAX;
-        expected[category] = 1;
-    }
-
-    std::cout << "\nInput\n" << std::endl;
-    for (auto s : input)
-    {
-        std::cout << s << " ";
-    }
-
-    std::cout << std::endl;
-
-    std::cout << "Expected:\n";
-    for (auto s : expected)
-    {
-        std::cout << s << " ";
-    }
-
-    std::cout << "\n" << std::endl;
-
-    cop::NeuralNetwork network{inputSize, outputSize};
-
-    network.writeLog();
+    cop::NeuralNetwork network{2, 2, 2};
     network.setBatchSize(1);
     network.setEpochs(1);
     network.setWorkers(std::thread::hardware_concurrency());
     network.setWorkers(1);
 
-    network.fit(input.data(), items, expected.data());
+    //network.save("temp.nwk");
+    network.load("temp.nwk");
+    //network.writeLog();
+
+    network.fit(input.data(), 1, expected.data());
 }
 
 /*

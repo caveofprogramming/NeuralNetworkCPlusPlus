@@ -20,16 +20,11 @@ namespace cop
         int logInterval_ = 1;
         int workers_ = 1;
 
-        std::mutex mtxLog_;
-
-        std::ostream &log_  = std::cout;
-
     protected:
         void runEpoch(double *pInput, int numberInputVectors, double *pExpected);
         int runBatch(int sequence, double *pInput, int numberInputVectors, double *pExpected);
         void computeOutputs(std::vector<cop::Matrix> &layerIo);
         void computeDeltas(std::vector<cop::Matrix> &deltas, std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
-        void showGradients(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected);
 
     public:
 
@@ -39,6 +34,9 @@ namespace cop
         void setWorkers(int workers) { workers_ = workers; };
         void setEpochs(int epochs) { epochs_ = epochs; }
         double computeLoss(const Matrix &actual, const Matrix &expected);
+
+        void save(std::string filename);
+        void load(std::string filename);
 
         void writeLog();
     };

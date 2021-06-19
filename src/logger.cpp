@@ -1,36 +1,37 @@
 #include "logger.h"
 
-cop::Logger logger;
-
-void cop::Logger::log(std::string label, std::vector<cop::Matrix> &weights, std::vector<cop::Matrix> &biases)
+cop::Logger &cop::Logger::operator<<(std::string text)
 {
-    for(int i = 0; i < weights.size(); i++)
-    {
-        auto &w = weights[i];
-        auto &b = biases[i];
-
-        log(label, i, w, b);
-    }
+    out_ << text;
+    return *this;
 }
 
-void cop::Logger::log(std::string label, int layer, cop::Matrix &weights, cop::Matrix &biases)
+cop::Logger &cop::Logger::operator<<(double value)
 {
-    std::unique_lock<std::mutex> lock(mtx_);
+    out_ << value;
+    return *this;
+}
 
-    out << label << "\n";
-    out << "Layer " << layer << "\n";
+cop::Logger &cop::Logger::operator<<(int value)
+{
+    out_ << value;
+    return *this;
+}
 
-    out << std::showpos << std::fixed << std::setprecision(5);
+cop::Logger &cop::Logger::operator<<(cop::Lock &lock)
+{
+    mtx_.lock();
+    return *this;
+}
 
-    for(int row = 0; row < weights.rows(); row++)
-    {
-        for(int col = 0; col < weights.cols(); col++)
-        {
-            out << std::setw(12) << weights[row][col];
-        }
+cop::Logger &cop::Logger::operator<<(cop::Unlock &lock)
+{
+    mtx_.unlock();
+    return *this;
+}
 
-        out << " | " << biases[row][0] << "\n";
-    }
-
-    out << std::endl;
+cop::Logger &cop::Logger::operator<<(cop::Endl &lock)
+{
+    out_ << std::endl;
+    return *this;
 }

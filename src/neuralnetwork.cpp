@@ -3,12 +3,85 @@
 #include <thread>
 #include <chrono>
 #include <cmath>
+#include <fstream>
 #include "threadpool.h"
 #include "activations.h"
 #include "neuralnetwork.h"
 #include "logger.h"
 
 using namespace std::chrono;
+
+void cop::NeuralNetwork::save(std::string filename)
+{
+    std::ofstream outputFile;
+
+    outputFile.open(filename, std::ios::binary);
+
+    if (outputFile.is_open())
+    {
+        outputFile.write(reinterpret_cast<char *>(&batchSize_), sizeof(batchSize_));
+        outputFile.write(reinterpret_cast<char *>(&epochs_), sizeof(epochs_));
+        outputFile.write(reinterpret_cast<char *>(&logInterval_), sizeof(logInterval_));
+        outputFile.write(reinterpret_cast<char *>(&workers_), sizeof(workers_));
+
+        int layers = w_.size();
+        outputFile.write(reinterpret_cast<char *>(&layers), sizeof(layers));
+
+        for (int layer = 0; layer < w_.size(); layer++)
+        {
+            auto &weights = w_[layer];
+            auto &biases = b_[layer];
+
+            weights.serialize(outputFile);
+            biases.serialize(outputFile);
+        }
+
+        outputFile.close();
+    }
+    else
+    {
+        std::cout << "Could not create file " + filename;
+    }
+}
+
+void cop::NeuralNetwork::load(std::string filename)
+{
+    std::ifstream inputFile;
+
+    inputFile.open(filename, std::ios::binary);
+
+    if (inputFile.is_open())
+    {
+        inputFile.read(reinterpret_cast<char *>(&batchSize_), sizeof(batchSize_));
+        inputFile.read(reinterpret_cast<char *>(&epochs_), sizeof(epochs_));
+        inputFile.read(reinterpret_cast<char *>(&logInterval_), sizeof(logInterval_));
+        inputFile.read(reinterpret_cast<char *>(&workers_), sizeof(workers_));
+
+        int layers = 0;
+        inputFile.read(reinterpret_cast<char *>(&layers), sizeof(layers));
+
+        w_.clear();
+        b_.clear();
+
+        for (int layer = 0; layer < layers; layer++)
+        {
+            Matrix weights;
+            Matrix biases;
+
+            weights.deserialize(inputFile);
+            biases.deserialize(inputFile);
+
+            w_.push_back(std::move(weights));
+            b_.push_back(std::move(biases));
+        }
+
+        inputFile.close();
+    }
+    else
+    {
+        std::cout << "Could not create file " + filename;
+    }
+}
 
 cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
 {
@@ -35,7 +108,12 @@ cop::NeuralNetwork::NeuralNetwork(std::initializer_list<int> layerSizes)
 
 void cop::NeuralNetwork::writeLog()
 {
-    logger.log("Network", w_, b_);
+    cop::logger << "Network:\n";
+
+    for (int i = 0; i < w_.size(); i++)
+    {
+        cop::logger << w_[i].augment(b_[i]).toString() << "\n";
+    }
 }
 
 void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
@@ -53,100 +131,15 @@ void cop::NeuralNetwork::computeOutputs(std::vector<cop::Matrix> &layerIo)
     }
 }
 
-void cop::NeuralNetwork::showGradients(std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
-{
-    computeOutputs(layerIo);
-    auto loss = computeLoss(layerIo.back(), expected);
-
-    std::cout.precision(10);
-    std::cout << "\nLOSS1  " << loss << std::endl;
-    const double inc = 0.0000001;
-
-/*
-    b_[0][0][0] += inc;
-
-    computeOutputs(layerIo);
-    auto loss2 = computeLoss(layerIo.back(), expected);
-
-    std::cout << "\nLOSS2  " << loss2 << std::endl;
-
-    std::cout << "\nRATE: " << (loss2 - loss)/inc << std::endl;
-
-    b_[0][0][0] -= inc;
-*/
-
-    for (int layer = 0; layer < w_.size(); layer++)
-    {
-        auto &weights = w_[layer];
-        auto &biases = b_[layer];
-
-        auto weightRates = Matrix(weights.rows(), weights.cols());
-        auto biasRates = Matrix(biases.rows(), 1);
-
-        for (int row = 0; row < weights.rows(); row++)
-        {
-            for (int col = 0; col < weights.cols(); col++)
-            {
-                double weightValue = weights[row][col];
-
-                weights[row][col] = weightValue + inc;
-
-                computeOutputs(layerIo);
-                auto newLoss = computeLoss(layerIo.back(), expected);
-
-                weightRates[row][col] = (newLoss - loss) / inc;
-
-                weights[row][col] = weightValue;
-            }
-
-            double biasValue = biases[row][0];
-
-            biases[row][0] = biasValue + inc;
-
-            computeOutputs(layerIo);
-            auto newLoss = computeLoss(layerIo.back(), expected);
-
-            biasRates[row][0] = (newLoss - loss) / inc;
-
-            biases[row][0] = biasValue;
-        }
-
-        logger.log("Computed gradients", layer, weightRates, biasRates);
-    }
-
-    // Recompute original layerIo
-    computeOutputs(layerIo);
-    auto loss2 = computeLoss(layerIo.back(), expected);
-
-    std::cout << "Should be zero: " << (loss2 - loss) << std::endl;
-
-}
-
 void cop::NeuralNetwork::computeDeltas(std::vector<cop::Matrix> &deltas, std::vector<cop::Matrix> &layerIo, const cop::Matrix &expected)
 {
     auto loss = computeLoss(layerIo.back(), expected);
 
     auto errors = layerIo.back() - expected;
 
-    std::cout << "\nOutput:\n"
-              << layerIo.back() << std::endl;
-
-    double sum = 0;
-
-    auto &output = layerIo.back();
-
-    for (int i = 0; i < output.rows(); i++)
-    {
-
-        sum += output[i][0];
-    }
-
-    std::cout << "sum: " << sum << std::endl;
-
-    std::cout << "Errors: \n"
-              << errors << std::endl;
-    
-    deltas[0] = std::move(errors);
+    deltas.push_back(std::move(errors));
+    std::cout << "\ndeltas\n"
+              << deltas.back() << std::endl;
 }
 
 int cop::NeuralNetwork::runBatch(int sequence, double *pInput, int numberInputVectors, double *pExpected)
@@ -184,12 +177,22 @@ int cop::NeuralNetwork::runBatch(int sequence, double *pInput, int numberInputVe
         expected.setData(pExpectedVector, outputRows * sizeof(double));
 
         computeOutputs(layerIo);
-        showGradients(layerIo, expected);
         computeDeltas(deltas, layerIo, expected);
 
-        std::cout << "\nDeltas:\n" << deltas[0] << std::endl;
-        std::cout << "\nLayer input:\n" << layerIo[0] << std::endl;
-        std::cout << "\nCalculated gradients:\n" << deltas[0] * ~layerIo[0] << std::endl;
+        auto loss1 = computeLoss(layerIo.back(), expected);
+
+        /******* TEST *****************************/
+
+        double inc = 0.0000001;
+        b_[1][1][0] += inc;
+        computeOutputs(layerIo);
+
+        auto loss2 = computeLoss(layerIo.back(), expected);
+
+        std::cout << "Rate: " << (loss2-loss1)/inc << std::endl;
+
+
+        /******************************************/
 
         pInputVector += inputRows;
         pExpectedVector += outputRows;
@@ -197,8 +200,7 @@ int cop::NeuralNetwork::runBatch(int sequence, double *pInput, int numberInputVe
 
     if (logInterval_ != 0 && sequence % logInterval_ == 0)
     {
-        std::unique_lock<std::mutex> lock(mtxLog_);
-        log_ << "." << std::flush;
+        cop::logger << ".";
     }
 
     return 0;
@@ -268,17 +270,15 @@ void cop::NeuralNetwork::runEpoch(double *pInput, int numberInputVectors, double
     steady_clock::time_point t2 = high_resolution_clock::now();
     duration<double, std::milli> duration = t2 - t1;
 
-    log_ << " " << duration.count() << " ms" << std::endl;
+    cop::logger << duration.count() << " ms";
 }
 
 void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pExpected)
 {
-
-    log_ << "Batch size: " << batchSize_ << std::endl;
-    log_ << "Number of inputs: " << numberInputVectors << std::endl;
-    log_ << "Worker threads: " << workers_ << std::endl;
-    log_ << "Epochs: " << epochs_ << std::endl;
-    log_ << std::endl;
+    cop::logger << "Batch size:" << batchSize_ << "\n";
+    cop::logger << "Number of inputs:" << numberInputVectors << "\n";
+    cop::logger << "Worker threads: " << workers_ << "\n";
+    cop::logger << "Epochs: " << epochs_ << "\n";
 
     steady_clock::time_point t1 = high_resolution_clock::now();
 
@@ -286,7 +286,7 @@ void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pEx
 
     for (int i = 0; i < epochs_; i++)
     {
-        log_ << "Epoch: " << i + 1 << " " << std::flush;
+        cop::logger << "Epoch: " << i + 1 << "\n";
 
         runEpoch(pInput, numberInputVectors, pExpected);
     }
@@ -295,7 +295,5 @@ void cop::NeuralNetwork::fit(double *pInput, int numberInputVectors, double *pEx
 
     duration<double, std::milli> duration = t2 - t1;
 
-    std::cout << "\nCompleted in " << duration.count() / 1000 << " seconds" << std::endl;
+    cop::logger << "Completed in " << duration.count() / 1000 << " seconds";
 }
-
-// TODO change log_ to logger.log

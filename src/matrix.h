@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 namespace cop
 {
@@ -22,6 +23,11 @@ namespace cop
 
     public:
         Matrix(const Matrix &other) = delete;
+
+        Matrix()
+        {
+
+        }
 
         Matrix(Matrix &&other)
         {
@@ -55,7 +61,7 @@ namespace cop
         {
             Matrix result(rows_, cols_);
 
-            for(int i = 0; i < rows_ * cols_; i++)
+            for (int i = 0; i < rows_ * cols_; i++)
             {
                 result.e_[i] = e_[i] - other.e_[i];
             }
@@ -68,10 +74,16 @@ namespace cop
             e_.resize(rows * cols);
         }
 
+        Matrix(int rows, int cols, double *pData) : rows_(rows), cols_(cols)
+        {
+            e_.resize(rows * cols);
+            memcpy(e_.data(), pData, rows * cols * sizeof(double));
+        }
+
         Matrix(int rows, double *pData) : rows_(rows), cols_(1)
         {
             e_.resize(rows);
-            memcpy(e_.data(), pData, rows);
+            memcpy(e_.data(), pData, rows * sizeof(double));
         }
 
         Matrix(std::initializer_list<std::initializer_list<double>> init)
@@ -93,7 +105,7 @@ namespace cop
 
             // Initialise column vectors by default,
             // not row vectors.
-            if(rows_ == 1)
+            if (rows_ == 1)
             {
                 rows_ = cols_;
                 cols_ = 1;
@@ -102,6 +114,23 @@ namespace cop
 
         ~Matrix()
         {
+        }
+
+        void serialize(std::ostream &out)
+        {
+            out.write(reinterpret_cast<char *>(&rows_), sizeof(rows_));
+            out.write(reinterpret_cast<char *>(&cols_), sizeof(cols_));
+            out.write(reinterpret_cast<char *>(e_.data()), rows_ * cols_ * sizeof(e_[0]));
+        }
+
+        void deserialize(std::istream &in)
+        {
+            in.read(reinterpret_cast<char *>(&rows_), sizeof(rows_));
+            in.read(reinterpret_cast<char *>(&cols_), sizeof(cols_));
+
+            e_.resize(rows_ * cols_);
+
+            in.read(reinterpret_cast<char *>(e_.data()), rows_ * cols_ * sizeof(e_[0]));
         }
 
         void setData(double *pData, int nBytes)
@@ -229,5 +258,53 @@ namespace cop
 
             return out;
         }
+
+        Matrix augment(Matrix &m)
+        {
+             if (rows() != m.rows())
+            {
+                std::stringstream message;
+                message << "Cannot augment matrix." << std::endl;
+                message << rows() << " vs. " << m.rows()  << std::endl;
+
+                throw std::runtime_error(message.str());
+            }
+
+            Matrix result(rows(), cols() + m.cols());
+
+            for(int i = 0; i < rows(); i++)
+            {
+                for(int col = 0; col < cols(); col++)
+                {
+                    result[i][col] = (*this)[i][col];
+                }
+
+                for(int col = 0; col < m.cols(); col++)
+                {
+                    result[i][col + cols()] = m[i][col];
+                }
+            }
+
+            return result;
+        }
+
+        std::string toString()
+        {
+            std::stringstream ss;
+
+            for(int row = 0; row < rows_; row++)
+            {
+                for(int col = 0; col < cols_; col++)
+                {
+                    ss << std::setw(12) << (*this)[row][col];
+                }
+
+                ss << "\n";
+            }
+
+            return ss.str();
+        }
     };
+
+
 }

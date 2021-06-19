@@ -1,33 +1,42 @@
-#include <iostream>
-#include <string>
+#pragma once
+
 #include <mutex>
-#include "matrix.h"
+#include <iostream>
 
 namespace cop
 {
+    struct Endl
+    {
+
+    };
+
+    struct Lock
+    {
+
+    };
+
+    struct Unlock
+    {
+
+    };
+
     class Logger
     {
     private:
-        std::ostream &out = std::cout;
+        std::ostream &out_ = std::cout;
         std::mutex mtx_;
 
-    
     public:
-        void log(std::string text)
-        {
-            std::unique_lock<std::mutex> lock(mtx_);
-            out << text << std::endl;
-        }
-
-        void log(std::string text, double value)
-        {
-            std::unique_lock<std::mutex> lock(mtx_);
-            out << text << " " << value << std::endl;
-        }
-
-        void log(std::string label, std::vector<cop::Matrix> &weights, std::vector<cop::Matrix> &biases);
-        void log(std::string label, int layer, cop::Matrix &weights, cop::Matrix &biases);
+        cop::Logger &operator<<(std::string text);
+        cop::Logger &operator<<(double value);
+        cop::Logger &operator<<(int value);
+        cop::Logger &operator<<(cop::Lock &lock);
+        cop::Logger &operator<<(cop::Unlock &lock);
+        cop::Logger &operator<<(cop::Endl &lock);
     };
 
-    static Logger logger;
+    inline Lock lock;
+    inline Unlock unlock;
+    inline Endl endl;
+    inline Logger logger;
 }

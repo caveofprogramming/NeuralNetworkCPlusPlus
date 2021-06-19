@@ -17,9 +17,7 @@ set(SRC_FILES   ${SOURCE_DIR}/main.cpp
                 ${SOURCE_DIR}/neuralnetwork.cpp
                 ${SOURCE_DIR}/imageloader.cpp
                 ${SOURCE_DIR}/image.cpp
-                ${SOURCE_DIR}/logger.cpp
-
-)
+                ${SOURCE_DIR}/logger.cpp)
 
 add_executable(neuralnetwork ${SRC_FILES})
 
